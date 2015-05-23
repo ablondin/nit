@@ -162,12 +162,11 @@ abstract class AbstractDigraph[V: Object]
 	end
 end
 
-# A directed graph with low density.
-class SparseDigraph[V: Object]
+# A directed graph represented by hash maps
+class HashMapDigraph[V: Object]
 	super AbstractDigraph[V]
 
 	# Attributes
-	private var objects: Array[V] is noinit
 	private var pred_map = new HashMap[V, Array[V]]
 	private var succ_map = new HashMap[V, Array[V]]
 
@@ -187,6 +186,9 @@ class SparseDigraph[V: Object]
 		if succ_map.keys.has(u) then
 			for v in succ_map[u] do
 				remove_arc(u, v)
+			end
+			for v in pred_map[u] do
+				remove_arc(v, u)
 			end
 			succ_map.keys.remove(u)
 			num_vertices -= 1
@@ -220,6 +222,96 @@ class SparseDigraph[V: Object]
 		else
 			return new Array[V]
 		end
+	end
+
+	redef fun successors(u: V): Collection[V]
+	do
+		if succ_map.keys.has(u) then
+			return succ_map[u]
+		else
+			return new Array[V]
+		end
+	end
+
+	redef fun vertices: RemovableCollection[V]
+	do
+		return pred_map.keys
+	end
+
+	redef fun arcs: Array[Arc[V]]
+	do
+		var arcs = new Array[Arc[V]]
+		for u in vertices do
+			for v in succ_map[u] do
+				arcs.add(new Arc[V](u, v))
+			end
+		end
+		return arcs
+	end
+end
+
+# A directed graph represented by a matrix
+class MatrixDigraph[V: Object]
+	super AbstractDigraph[V]
+
+	# Attributes
+	public var max_size: Int
+	private var vertex_index: HashMap[V, Int]
+	private var vertex_index: HashMap[V, Int]
+	private var matrix: Array[Array[Bool]]
+
+	init
+	do
+		matrix = new Array[Array[Bool]].with_capacity(max_size)
+		for i in [1..max_size] do
+			matrix[i] = new Array[Bool].with_capacity(max_size)
+		end
+	end
+
+	redef fun add_vertex(u: V)
+	do
+		if not vertex_index.keys.has(u) then
+			vertex_index[u] = num_vertices
+			num_vertices += 1
+		end
+	end
+
+	redef fun remove_vertex(u: V)
+	do
+		if vertex_index.keys.has(u) then
+			for v in successors(u) do
+				remove_arc(u, v)
+			end
+			for v in predecessors(u) do
+				remove_arc(v, u)
+			end
+			vertex_index.keys.remove(u)
+			num_vertices -= 1
+		end
+	end
+
+	redef fun add_arc(u: V, v: V)
+	do
+		if not vertex_index.keys.has(u) then add_vertex(u)
+		if not vertex_index.keys.has(v) then add_vertex(v)
+		matrix[vertex_index[u]][vertex_index[v]] = true
+	end
+
+	redef fun remove_arc(u: V, v: V)
+	do
+		if vertex_index.keys.has(u) and vertex_index.keys.has(v) then
+			if matrix[vertex_index[u]][vertex_index[v]] then
+				matrix[vertex_index[u]][vertex_index[v]] = false
+				num_arcs -= 1
+			end
+		end
+	end
+
+	redef fun predecessors(u: V): Collection[V]
+	do
+		var pred = new Array[V]
+		for 
+		return pred
 	end
 
 	redef fun successors(u: V): Collection[V]
