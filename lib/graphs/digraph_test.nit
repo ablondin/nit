@@ -1,6 +1,6 @@
 import digraph
 
-var g = new SparseDigraph[String]
+var g = new ArrayDigraph[String]
 g.add_vertex("a")
 g.add_vertex("b")
 g.add_arc("a", "c")
@@ -14,4 +14,4 @@ print(g.incoming_arcs("b"))
 print(g.outgoing_arcs("b"))
 var cc = g.weak_connected_components
 print(cc)
-print(cc.number_of_subsets)
+print(cc.all_subsets)

@@ -1,7 +1,7 @@
 # Implementation of a directed graph
 module digraph
 
-# An arc
+# An arc of a digraph
 class Arc[V]
 	# The source of the arc
 	var source: V
@@ -30,44 +30,41 @@ abstract class AbstractDigraph[V: Object]
 	## Abstract methods ##
 	## ---------------- ##
 
-	# Adds the vertex ``u`` to this graph.
+	# Adds the vertex `u` to this graph.
 	#
-	# If ``u`` already belongs to the graph, then
-	# nothing happens.
+	# If `u` already belongs to the graph, then nothing happens.
 	fun add_vertex(u: V) is abstract
 
-	# Removes the vertex ``u`` from this graph and all
-	# its incident arcs.
+	# Returns true if and only if `u` exists in this graph.
+	fun has_vertex(u: V): Bool is abstract
+
+	# Removes the vertex `u` from this graph and all its incident arcs.
 	#
-	# If the vertex does not exist in the graph, then
-	# nothing happens.
+	# If the vertex does not exist in the graph, then nothing happens.
 	fun remove_vertex(u: V) is abstract
 
-	# Adds the arc ``(u,v)`` to this graph.
+	# Adds the arc `(u,v)` to this graph.
 	#
-	# If the arc already exists in the graph, then
-	# nothing happens. If vertex ``u`` or vertex ``v``
-	# do not exist in the graph, they are added.
-	fun add_arc(u: V, v: V) is abstract
+	# If the arc already exists in the graph, then nothing happens.
+	# If vertex `u` or vertex `v` do not exist in the graph, they are added.
+	fun add_arc(u, v: V) is abstract
 
-	# Removes the arc ``(u,v)`` from this graph.
-	#
-	# If the arc does not exist in the graph, then
-	# nothing happens.
-	fun remove_arc(u: V, v: V) is abstract
+	# Returns true if and only if `(u,v)` is an arc in this graph.
+	fun has_arc(u, v: V): Bool is abstract
 
-	# Returns the predecessors of ``u``, i.e. the
-	# vertices ``v`` such that ``(u,v)`` is an arc
+	# Removes the arc `(u,v)` from this graph.
 	#
-	# If ``u`` does not exist, then an empty collection
-	# is returned.
+	# If the arc does not exist in the graph, then nothing happens.
+	fun remove_arc(u, v: V) is abstract
+
+	# Returns the predecessors of `u`.
+	#
+	# If `u` does not exist, then an empty collection is returned.
 	fun predecessors(u: V): Collection[V] is abstract
 
-	# Returns the successors of ``u``, i.e. the
-	# vertices ``v`` such that ``(u,v)`` is an arc
+	# Returns the successors of `u`.
 	#
-	# If ``u`` does not exist, then an empty collection
-	# is returned.
+	# If `u` does not exist, then an empty collection is returned.
 	fun successors(u: V): Collection[V] is abstract
 
 	# Returns the vertices of this graph.
@@ -80,6 +77,18 @@ abstract class AbstractDigraph[V: Object]
 	## Non abstract methods ##
 	## -------------------- ##
 
+	# Returns true if and only if `u` is a predecessor of `v`.
+	fun is_predecessor(u, v: V): Bool
+	do
+		return has_arc(u, v)
+	end
+
+	# Returns true if and only if `u` is a successor of `v`.
+	fun is_successor(u, v: V): Bool
+	do
+		return has_arc(v, u)
+	end
+
 	redef fun to_s: String
 	do
 		var s = "vertices"
@@ -89,10 +98,9 @@ abstract class AbstractDigraph[V: Object]
 		return "Digraph of {num_vertices} {s} and {num_arcs} {t}"
 	end
 
-	# Returns the incoming arcs of vertex ``u``.
+	# Returns the incoming arcs of vertex `u`.
 	#
-	# If ``u`` is not in this graph, an empty
-	# array is returned.
+	# If `u` is not in this graph, an empty array is returned.
 	fun incoming_arcs(u: V): Array[Arc[V]]
 	do
 		var arcs = new Array[Arc[V]]
@@ -102,10 +110,9 @@ abstract class AbstractDigraph[V: Object]
 		return arcs
 	end
 
-	# Returns the outgoing arcs of vertex ``u``.
+	# Returns the outgoing arcs of vertex `u`.
 	#
-	# If ``u`` is not in this graph, an empty
-	# array is returned.
+	# If `u` is not in this graph, an empty array is returned.
 	fun outgoing_arcs(u: V): Array[Arc[V]]
 	do
 		var arcs = new Array[Arc[V]]
@@ -115,8 +122,7 @@ abstract class AbstractDigraph[V: Object]
 		return arcs
 	end
 
-	# Returns a GraphViz string representing this
-	# digraph.
+	# Returns a GraphViz string representing this digraph.
 	fun to_graphviz: String
 	do
 		var s = "digraph \{\n"
@@ -134,15 +140,13 @@ abstract class AbstractDigraph[V: Object]
 		return s
 	end
 
-	# Returns the indegree of ``u``, i.e. the number
-	# of arcs whose target is ``u``.
+	# Returns the number of arcs whose target is `u`.
 	fun in_degree(u: V): Int
 	do
 		return predecessors(u).length
 	end
 
-	# Returns the outdegree of ``u``, i.e. the number
-	# of arcs whose source is ``u``.
+	# Returns the number of arcs whose source is `u`.
 	fun out_degree(u: V): Int
 	do
 		return successors(u).length
@@ -151,6 +155,11 @@ abstract class AbstractDigraph[V: Object]
 	# -------------------- #
 	# Connected components #
 	# -------------------- #
+	# Returns the weak connected components of this digraph.
+	#
+	# The weak connected components of a digraph are the usual
+	# connected components of its associated undirected graph,
+	# i.e. the graph obtained by replacing each arc by an edge.
 	fun weak_connected_components: DisjointSet[V]
 	do
 		var components = new DisjointSet[V]
@@ -172,7 +181,7 @@ class HashMapDigraph[V: Object]
 
 	redef fun add_vertex(u: V)
 	do
-		if pred_map.keys.has(u) then
+		if has_vertex(u) then
 			return
 		else
 			pred_map[u] = new Array[V]
@@ -181,13 +190,18 @@ class HashMapDigraph[V: Object]
 		end
 	end
 
+	redef fun has_vertex(u: V): Bool
+	do
+		return pred_map.keys.has(u)
+	end
+
 	redef fun remove_vertex(u: V)
 	do
-		if succ_map.keys.has(u) then
-			for v in succ_map[u] do
+		if has_vertex(u) then
+			for v in successors(u) do
 				remove_arc(u, v)
 			end
-			for v in pred_map[u] do
+			for v in predecessors(u) do
 				remove_arc(v, u)
 			end
 			succ_map.keys.remove(u)
@@ -195,27 +209,32 @@ class HashMapDigraph[V: Object]
 		end
 	end
 
-	redef fun add_arc(u: V, v: V)
+	redef fun add_arc(u, v: V)
 	do
-		if not succ_map.keys.has(u) then add_vertex(u)
-		if not succ_map.keys.has(v) then add_vertex(v)
-		if not succ_map[u].has(u) then
+		if not has_vertex(u) then add_vertex(u)
+		if not has_vertex(v) then add_vertex(v)
+		if not has_arc(u, v) then
 			succ_map[u].add(v)
 			pred_map[v].add(u)
 			num_arcs += 1
 		end
 	end
 
+	redef fun has_arc(u, v: V): Bool
+	do
+		return succ_map[u].has(v)
+	end
+
 	redef fun remove_arc(u: V, v: V)
 	do
-		if succ_map.keys.has(u) and succ_map[u].has(v) then
+		if has_vertex(u) and has_vertex(v) and has_arc(u, v) then
 			succ_map[u].remove(v)
 			pred_map[v].remove(u)
 			num_arcs -= 1
 		end
 	end
 
-	redef fun predecessors(u: V): Collection[V]
+	redef fun predecessors(u: V): Array[V]
 	do
 		if pred_map.keys.has(u) then
 			return pred_map[u]
@@ -224,7 +243,7 @@ class HashMapDigraph[V: Object]
 		end
 	end
 
-	redef fun successors(u: V): Collection[V]
+	redef fun successors(u: V): Array[V]
 	do
 		if succ_map.keys.has(u) then
 			return succ_map[u]
@@ -235,7 +254,7 @@ class HashMapDigraph[V: Object]
 
 	redef fun vertices: RemovableCollection[V]
 	do
-		return pred_map.keys
+		return succ_map.keys
 	end
 
 	redef fun arcs: Array[Arc[V]]
@@ -250,92 +269,101 @@ class HashMapDigraph[V: Object]
 	end
 end
 
-# A directed graph represented by a matrix
-class MatrixDigraph[V: Object]
+# A directed graph represented by a bidimensional array
+class ArrayDigraph[V: Object]
 	super AbstractDigraph[V]
 
 	# Attributes
-	public var max_size: Int
-	private var vertex_index: HashMap[V, Int]
-	private var vertex_index: HashMap[V, Int]
-	private var matrix: Array[Array[Bool]]
-
-	init
-	do
-		matrix = new Array[Array[Bool]].with_capacity(max_size)
-		for i in [1..max_size] do
-			matrix[i] = new Array[Bool].with_capacity(max_size)
-		end
-	end
+	private var vertex_to_index = new HashMap[V, Int]
+	private var index_to_vertex = new HashMap[Int, V]
+	private var matrix = new Array[Array[Bool]]
 
 	redef fun add_vertex(u: V)
 	do
-		if not vertex_index.keys.has(u) then
-			vertex_index[u] = num_vertices
+		if not has_vertex(u) then
+			vertex_to_index[u] = num_vertices
+			index_to_vertex[num_vertices] = u
+			matrix[num_vertices] = new Array[Bool].filled_with(false, num_vertices)
+			for i in [0..num_vertices] do
+				matrix[i][num_vertices] = false
+			end
 			num_vertices += 1
 		end
 	end
 
+	redef fun has_vertex(u: V)
+	do
+		return vertex_to_index.keys.has(u)
+	end
+
 	redef fun remove_vertex(u: V)
 	do
-		if vertex_index.keys.has(u) then
+		if has_vertex(u) then
 			for v in successors(u) do
 				remove_arc(u, v)
 			end
 			for v in predecessors(u) do
 				remove_arc(v, u)
 			end
-			vertex_index.keys.remove(u)
+			var ui = vertex_to_index[u]
+			matrix[ui] = matrix[num_vertices - 1]
+			for i in [0..num_vertices[ do
+				matrix[i][ui] = matrix[i][num_vertices - 1]
+				matrix[i].remove_at(num_vertices - 1)
+			end
+			vertex_to_index.keys.remove(u)
+			index_to_vertex.keys.remove(ui)
 			num_vertices -= 1
 		end
 	end
 
-	redef fun add_arc(u: V, v: V)
+	redef fun add_arc(u, v: V)
 	do
-		if not vertex_index.keys.has(u) then add_vertex(u)
-		if not vertex_index.keys.has(v) then add_vertex(v)
-		matrix[vertex_index[u]][vertex_index[v]] = true
+		if not has_vertex(u) then add_vertex(u)
+		if not has_vertex(v) then add_vertex(v)
+		if not has_arc(u, v) then
+			matrix[vertex_to_index[u]][vertex_to_index[v]] = true
+			num_arcs += 1
+		end
+	end
+
+	redef fun has_arc(u, v: V): Bool
+	do
+		return matrix[vertex_to_index[u]][vertex_to_index[v]]
 	end
 
 	redef fun remove_arc(u: V, v: V)
 	do
-		if vertex_index.keys.has(u) and vertex_index.keys.has(v) then
-			if matrix[vertex_index[u]][vertex_index[v]] then
-				matrix[vertex_index[u]][vertex_index[v]] = false
-				num_arcs -= 1
-			end
+		if has_vertex(u) and has_vertex(v) and has_arc(u, v) then
+			matrix[vertex_to_index[u]][vertex_to_index[v]] = false
+			num_arcs -= 1
 		end
 	end
 
 	redef fun predecessors(u: V): Collection[V]
 	do
-		var pred = new Array[V]
-		for 
-		return pred
+		var ui = vertex_to_index[u]
+		return [for i in [0..num_vertices[
+			do if matrix[i][ui] then index_to_vertex[i]]
 	end
 
 	redef fun successors(u: V): Collection[V]
 	do
-		if succ_map.keys.has(u) then
-			return succ_map[u]
-		else
-			return new Array[V]
-		end
+		var ui = vertex_to_index[u]
+		return [for i in [0..num_vertices[
+			do if matrix[ui][i] then index_to_vertex[i]]
 	end
 
 	redef fun vertices: RemovableCollection[V]
 	do
-		return pred_map.keys
+		return vertex_to_index.keys
 	end
 
 	redef fun arcs: Array[Arc[V]]
 	do
-		var arcs = new Array[Arc[V]]
-		for u in vertices do
-			for v in succ_map[u] do
-				arcs.add(new Arc[V](u, v))
-			end
-		end
-		return arcs
+		return [for i in [0..num_vertices[
+		     do for j in [0..num_vertices[
+		     do if matrix[i][j] then
+			new Arc[V](index_to_vertex[i], index_to_vertex[j])]
 	end
 end
