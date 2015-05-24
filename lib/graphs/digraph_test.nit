@@ -13,5 +13,6 @@ print(g.to_graphviz)
 print(g.incoming_arcs("b"))
 print(g.outgoing_arcs("b"))
 var cc = g.weak_connected_components
-print(cc)
-print(cc.all_subsets)
+for subset in cc.all_subsets do
+	print(subset)
+end
