@@ -152,9 +152,61 @@ abstract class AbstractDigraph[V: Object]
 		return successors(u).length
 	end
 
+	# ------------------ #
+	# Paths and circuits #
+	# ------------------ #
+
+	# Returns true if and only if `vertices` is a path of this digraph.
+	fun is_path(vertices: SequenceRead[V]): Bool
+	do
+		for i in [0..vertices.length[ do
+			if not has_arc(vertices[i], vertices[i + 1]) then return false
+		end
+		return true
+	end
+
+	# Returns true if and only if `vertices` is a circuit of this digraph.
+	fun is_circuit(vertices: SequenceRead[V]): Bool
+	do
+		return vertices.is_empty or (is_path(vertices) and vertices.first == vertices.last)
+	end
+
+	# Returns a shortest path between vertices `u` and `v`.
+	#
+	# If no path exists between `u` and `v`, it returns `null`.
+	fun a_shortest_path(u, v: V): nullable List[V]
+	do
+		var queue = (new Array[QueuePair[V]]).as_fifo
+		var pred = new HashMap[V, nullable V]
+		var pair: nullable QueuePair[V] = null
+		queue.add(new QueuePair[V](u, null))
+		while not queue.is_empty do
+			print(queue)
+			pair = queue.take
+			pred[pair.vertex] = pair.pred
+			if pair.vertex == v then break
+			for w in successors(pair.vertex) do
+				queue.add(new QueuePair[V](w, pair.vertex))
+			end
+		end
+		if pair.vertex == v then
+			var w: nullable V = v
+			var path = new List[V]
+			path.add(v)
+			while pred[w] != null do
+				path.unshift(pred[w].as(not null))
+				w = pred[w]
+			end
+			return path
+		else
+			return null
+		end
+	end
+
 	# -------------------- #
 	# Connected components #
 	# -------------------- #
+
 	# Returns the weak connected components of this digraph.
 	#
 	# The weak connected components of a digraph are the usual
@@ -365,5 +417,18 @@ class ArrayDigraph[V: Object]
 		     do for j in [0..num_vertices[
 		     do if matrix[i][j] then
 			new Arc[V](index_to_vertex[i], index_to_vertex[j])]
+	end
+end
+
+private class QueuePair[V]
+	var vertex: V
+	var pred: nullable V
+	redef fun to_s: String
+	do
+		if pred == null then
+			return "{vertex.to_s}"
+		else
+			return "{pred.to_s} -> {vertex.to_s}"
+		end
 	end
 end
