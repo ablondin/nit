@@ -6,10 +6,21 @@ module digraph
 # An arc of a digraph
 class Arc[V]
 	# The source of the arc
+	#
+	# ~~~
+	# var arc = new Arc[Int](0, 1)
+	# assert arc.source == 0
+	# ~~~
 	var source: V
+
 	# The target of the arc
+	#
+	# ~~~
+	# var arc = new Arc[Int](0, 1)
+	# assert arc.target == 1
+	# ~~~
 	var target: V
-	# String representation of an arc
+
 	redef fun to_s: String
 	do
 		return "({source.to_s}, {target.to_s})"
@@ -24,8 +35,27 @@ abstract class AbstractDigraph[V: Object]
 	## ---------- ##
 
 	# The number of vertices in this graph.
+	#
+	# ~~~
+	# var g = new HashMapDigraph[Int]
+	# g.add_vertex(0)
+	# g.add_vertex(1)
+	# assert g.num_vertices == 2
+	# g.add_vertex(0)
+	# assert g.num_vertices == 2
+	# ~~~
 	var num_vertices = 0
+
 	# The number of arcs in this graph.
+	# ~~~
+	# var g = new HashMapDigraph[Int]
+	# g.add_arc(0, 1)
+	# assert g.num_arcs == 1
+	# g.add_arc(0, 1)
+	# assert g.num_arcs == 1
+	# g.add_arc(2, 3)
+	# assert g.num_arcs == 2
+	# ~~~
 	var num_arcs = 0
 
 	## ---------------- ##
@@ -35,14 +65,42 @@ abstract class AbstractDigraph[V: Object]
 	# Adds the vertex `u` to this graph.
 	#
 	# If `u` already belongs to the graph, then nothing happens.
+	#
+	# ~~~
+	# var g = new HashMapDigraph[Int] # Or any class implementing AbstractDigraph
+	# g.add_vertex(0)
+	# assert g.has_vertex(0)
+	# assert not g.has_vertex(1)
+	# g.add_vertex(1)
+	# assert g.num_vertices == 2
+	# ~~~
 	fun add_vertex(u: V) is abstract
 
 	# Returns true if and only if `u` exists in this graph.
+	#
+	# ~~~
+	# var g = new HashMapDigraph[Int]
+	# g.add_vertex(1)
+	# assert g.has_vertex(1)
+	# assert not g.has_vertex(0)
+	# g.add_vertex(1)
+	# assert g.has_vertex(1)
+	# assert not g.has_vertex(0)
+	# ~~~
 	fun has_vertex(u: V): Bool is abstract
 
 	# Removes the vertex `u` from this graph and all its incident arcs.
 	#
 	# If the vertex does not exist in the graph, then nothing happens.
+	#
+	# ~~~
+	# var g = new HashMapDigraph[Int]
+	# g.add_vertex(0)
+	# g.add_vertex(1)
+	# assert g.has_vertex(0)
+	# g.remove_vertex(0)
+	# assert not g.has_vertex(0)
+	# ~~~
 	fun remove_vertex(u: V) is abstract
 
 	# Adds the arc `(u,v)` to this graph.
