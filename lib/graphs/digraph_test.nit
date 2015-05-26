@@ -12,11 +12,18 @@ g.add_arc("a", "d")
 g.add_arc("b", "d")
 g.add_arc("c", "d")
 g.add_arc("d", "a")
-print(g)
+g.add_arc("d", "e")
 
 var path = g.a_shortest_path("a", "e")
-if path != null then print(path)
+if path != null then print(path) else print "null"
 
-for subset in g.strongly_connected_components.to_partitions do
-	print subset
+for u in "abcde" do
+	for v in "abcde" do
+		var d = g.distance(u.to_s, v.to_s)
+		if d == null then
+			print "no path from {u} to {v}"
+		else
+			print "dist({u}, {v}) = {d}"
+		end
+	end
 end

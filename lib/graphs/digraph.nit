@@ -1,4 +1,6 @@
-# Implementation of a directed graph
+# Implementations for representing directed graphs, also called digraphs.
+#
+# Currently, there are two classes
 module digraph
 
 # An arc of a digraph
@@ -137,11 +139,9 @@ abstract class AbstractDigraph[V: Object]
 	fun to_graphviz: String
 	do
 		var s = "digraph \{\n"
-		var i = 0
 		# Writing the vertices
 		for u in vertices do
-			s += "  {i} [label=\"{u}\"];\n"
-			i += 1
+			s += "  \"{u}\" [label=\"{u}\"];\n"
 		end
 		# Writing the arcs
 		for arc in arcs do
@@ -191,33 +191,67 @@ abstract class AbstractDigraph[V: Object]
 	# If no path exists between `u` and `v`, it returns `null`.
 	fun a_shortest_path(u, v: V): nullable List[V]
 	do
-		var queue = (new Array[QueuePair[V]]).as_fifo
+		var queue = (new Array[V]).as_fifo
 		var pred = new HashMap[V, nullable V]
-		var pair: QueuePair[V]
-		queue.add(new QueuePair[V](u, null))
+		var visited = new HashMap[V, Bool]
+		var w: nullable V
+		pred[u] = null
+		queue.add(u)
 		loop
-			pair = queue.take
-			if not pred.keys.has(pair.vertex) then
-				pred[pair.vertex] = pair.pred
-				if pair.vertex == v then break
-				for w in successors(pair.vertex) do
-					queue.add(new QueuePair[V](w, pair.vertex))
+			w = queue.take
+			if not visited.get_or_default(w, false) then
+				visited[w] = true
+				if w == v then break
+				for wp in successors(w) do
+					if not pred.keys.has(wp) then
+						queue.add(wp)
+						pred[wp] = w
+					end
 				end
 			end
 			if queue.is_empty then break
 		end
-		if pair.vertex != v then
+		if w != v then
 			return null
 		else
-			var w: nullable V = v
 			var path = new List[V]
 			path.add(v)
+			w = v
 			while pred[w] != null do
 				path.unshift(pred[w].as(not null))
 				w = pred[w]
 			end
 			return path
 		end
+	end
+
+	# Returns the distance between `u` and `v`
+	#
+	# If no path exists between `u` and `v`, it returns null. It is not
+	# symmetric, i.e. we may have `dist(u, v) != dist(v, u)`.
+	fun distance(u, v: V): nullable Int
+	do
+		var queue = (new Array[V]).as_fifo
+		var dist = new HashMap[V, Int]
+		var visited = new HashMap[V, Bool]
+		var w: nullable V
+		dist[u] = 0
+		queue.add(u)
+		loop
+			w = queue.take
+			if not visited.get_or_default(w, false) then
+				visited[w] = true
+				if w == v then break
+				for wp in successors(w) do
+					if not dist.keys.has(wp) then
+						queue.add(wp)
+						dist[wp] = dist[w] + 1
+					end
+				end
+			end
+			if queue.is_empty then break
+		end
+		return dist.get_or_null(v)
 	end
 
 	# -------------------- #
