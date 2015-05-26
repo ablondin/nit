@@ -77,6 +77,10 @@ abstract class AbstractDigraph[V: Object]
 	## Non abstract methods ##
 	## -------------------- ##
 
+	## ------------ ##
+	## Neighborhood ##
+	## ------------ ##
+
 	# Returns true if and only if `u` is a predecessor of `v`.
 	fun is_predecessor(u, v: V): Bool
 	do
@@ -87,15 +91,6 @@ abstract class AbstractDigraph[V: Object]
 	fun is_successor(u, v: V): Bool
 	do
 		return has_arc(v, u)
-	end
-
-	redef fun to_s: String
-	do
-		var s = "vertices"
-		var t = "arcs"
-		if num_vertices <= 1 then s = "vertex"
-		if num_arcs <= 1 then t = "arc"
-		return "Digraph of {num_vertices} {s} and {num_arcs} {t}"
 	end
 
 	# Returns the incoming arcs of vertex `u`.
@@ -122,6 +117,22 @@ abstract class AbstractDigraph[V: Object]
 		return arcs
 	end
 
+	## ---------------------- ##
+	## String representations ##
+	## ---------------------- ##
+
+	redef fun to_s: String
+	do
+		var s = "vertices"
+		var t = "arcs"
+		if num_vertices <= 1 then s = "vertex"
+		if num_arcs <= 1 then t = "arc"
+		s = "Digraph of {num_vertices} {s} and {num_arcs} {t}\n"
+		s += "  Vertices: {vertices.join(" ")}\n"
+		s += "  Arcs: {arcs.join(" ")}"
+		return s
+	end
+
 	# Returns a GraphViz string representing this digraph.
 	fun to_graphviz: String
 	do
@@ -139,6 +150,10 @@ abstract class AbstractDigraph[V: Object]
 		s += "\}"
 		return s
 	end
+
+	# ------- #
+	# Degrees #
+	# ------- #
 
 	# Returns the number of arcs whose target is `u`.
 	fun in_degree(u: V): Int
@@ -178,18 +193,22 @@ abstract class AbstractDigraph[V: Object]
 	do
 		var queue = (new Array[QueuePair[V]]).as_fifo
 		var pred = new HashMap[V, nullable V]
-		var pair: nullable QueuePair[V] = null
+		var pair: QueuePair[V]
 		queue.add(new QueuePair[V](u, null))
-		while not queue.is_empty do
-			print(queue)
+		loop
 			pair = queue.take
-			pred[pair.vertex] = pair.pred
-			if pair.vertex == v then break
-			for w in successors(pair.vertex) do
-				queue.add(new QueuePair[V](w, pair.vertex))
+			if not pred.keys.has(pair.vertex) then
+				pred[pair.vertex] = pair.pred
+				if pair.vertex == v then break
+				for w in successors(pair.vertex) do
+					queue.add(new QueuePair[V](w, pair.vertex))
+				end
 			end
+			if queue.is_empty then break
 		end
-		if pair.vertex == v then
+		if pair.vertex != v then
+			return null
+		else
 			var w: nullable V = v
 			var path = new List[V]
 			path.add(v)
@@ -198,8 +217,6 @@ abstract class AbstractDigraph[V: Object]
 				w = pred[w]
 			end
 			return path
-		else
-			return null
 		end
 	end
 
@@ -221,6 +238,68 @@ abstract class AbstractDigraph[V: Object]
 		end
 		return components
 	end
+
+	# Returns the strongly connected components of this digraph.
+	#
+	# Two vertices `u` and `v` belong to the same strongly connected
+	# component if and only if there exists a path from `u` to `v`
+	# and there exists a path from `v` to `u`.
+	#
+	# This is computed in linear time (Tarjan's algorithm).
+	fun strongly_connected_components: DisjointSet[V]
+	do
+		sccs = new DisjointSet[V]
+		sccs.add_all(vertices)
+		tarjan_index = 0
+		tarjan_stack = (new Array[V]).as_lifo
+		tarjan_vertex_to_index = new HashMap[V, Int]
+		tarjan_ancestor = new HashMap[V, Int]
+		tarjan_in_stack = new HashMap[V, Bool]
+		for v in vertices do
+			tarjan(v)
+		end
+		return sccs
+	end
+
+	# The recursive part of Tarjan's algorithm
+	private fun tarjan(u: V)
+	do
+		tarjan_vertex_to_index[u] = tarjan_index
+		tarjan_ancestor[u] = tarjan_index
+		tarjan_index += 1
+		tarjan_stack.add(u)
+		tarjan_in_stack[u] = true
+		for v in successors(u) do
+			if not tarjan_vertex_to_index.keys.has(v) then
+				tarjan(v)
+				tarjan_ancestor[u] = tarjan_ancestor[u].min(tarjan_ancestor[v])
+			else if tarjan_in_stack[v] then
+				tarjan_ancestor[u] = tarjan_ancestor[u].min(tarjan_vertex_to_index[v])
+			end
+		end
+		if tarjan_vertex_to_index[u] == tarjan_ancestor[u] then
+			var v
+			loop
+				v = tarjan_stack.take
+				tarjan_in_stack[v] = false
+				sccs.union(u, v)
+				if u == v then break
+			end
+		end
+	end
+
+	# The strongly connected components computed in Tarjan's algorithm
+	private var sccs: DisjointSet[V] is noinit
+	# An index used for Tarjan's algorithm
+	private var tarjan_index: Int is noinit
+	# A stack used for Tarjan's algorithm
+	private var tarjan_stack: Queue[V] is noinit
+	# A map associating with each vertex its index
+	private var tarjan_vertex_to_index: HashMap[V, Int] is noinit
+	# A map associating with each vertex its ancestor in Tarjan's algorithm
+	private var tarjan_ancestor: HashMap[V, Int] is noinit
+	# True if and only if the vertex is in the stack
+	private var tarjan_in_stack: HashMap[V, Bool] is noinit
 end
 
 # A directed graph represented by hash maps
