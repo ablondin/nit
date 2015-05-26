@@ -427,6 +427,7 @@ class HashMapDigraph[V: Object]
 			for v in predecessors(u) do
 				remove_arc(v, u)
 			end
+			pred_map.keys.remove(u)
 			succ_map.keys.remove(u)
 			num_vertices -= 1
 		end
