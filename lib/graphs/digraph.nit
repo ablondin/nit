@@ -21,14 +21,11 @@ class Arc[V]
 	# ~~~
 	var target: V
 
-	redef fun to_s: String
-	do
-		return "({source.to_s}, {target.to_s})"
-	end
+	redef fun to_s: String do return "({source.to_s}, {target.to_s})"
 end
 
 # Interface for digraphs
-abstract class AbstractDigraph[V: Object]
+abstract class AbstractDigraph[V]
 
 	## ---------- ##
 	## Properties ##
@@ -142,16 +139,10 @@ abstract class AbstractDigraph[V: Object]
 	## ------------ ##
 
 	# Returns true if and only if `u` is a predecessor of `v`.
-	fun is_predecessor(u, v: V): Bool
-	do
-		return has_arc(u, v)
-	end
+	fun is_predecessor(u, v: V): Bool do return has_arc(u, v)
 
 	# Returns true if and only if `u` is a successor of `v`.
-	fun is_successor(u, v: V): Bool
-	do
-		return has_arc(v, u)
-	end
+	fun is_successor(u, v: V): Bool do return has_arc(v, u)
 
 	# Returns the incoming arcs of vertex `u`.
 	#
@@ -183,27 +174,26 @@ abstract class AbstractDigraph[V: Object]
 
 	redef fun to_s: String
 	do
-		var s = "vertices"
-		var t = "arcs"
-		if num_vertices <= 1 then s = "vertex"
-		if num_arcs <= 1 then t = "arc"
-		s = "Digraph of {num_vertices} {s} and {num_arcs} {t}\n"
-		s += "  Vertices: {vertices.join(" ")}\n"
-		s += "  Arcs: {arcs.join(" ")}"
-		return s
+		var vertex_word = "vertices"
+		var arc_word = "arcs"
+		if num_vertices <= 1 then vertex_word = "vertex"
+		if num_arcs <= 1 then arc_word = "arc"
+		return "Digraph of {num_vertices} {vertex_word} and {num_arcs} {arc_word}"
 	end
 
 	# Returns a GraphViz string representing this digraph.
-	fun to_graphviz: String
+	fun to_dot: String
 	do
 		var s = "digraph \{\n"
 		# Writing the vertices
 		for u in vertices do
-			s += "  \"{u}\" [label=\"{u}\"];\n"
+			s += "   \"{u.to_s.escape_to_dot}\" "
+			s += "[label=\"{u.to_s.escape_to_dot}\"];\n"
 		end
 		# Writing the arcs
 		for arc in arcs do
-			s += "  {arc.source} -> {arc.target};\n"
+			s += "   {arc.source.to_s.escape_to_dot} "
+			s += "-> {arc.target.to_s.escape_to_dot};\n"
 		end
 		s += "\}"
 		return s
@@ -214,16 +204,10 @@ abstract class AbstractDigraph[V: Object]
 	# ------- #
 
 	# Returns the number of arcs whose target is `u`.
-	fun in_degree(u: V): Int
-	do
-		return predecessors(u).length
-	end
+	fun in_degree(u: V): Int do return predecessors(u).length
 
 	# Returns the number of arcs whose source is `u`.
-	fun out_degree(u: V): Int
-	do
-		return successors(u).length
-	end
+	fun out_degree(u: V): Int do return successors(u).length
 
 	# ------------------ #
 	# Paths and circuits #
@@ -249,16 +233,15 @@ abstract class AbstractDigraph[V: Object]
 	# If no path exists between `u` and `v`, it returns `null`.
 	fun a_shortest_path(u, v: V): nullable List[V]
 	do
-		var queue = (new Array[V]).as_fifo
+		var queue = new List[V].from([u]).as_fifo
 		var pred = new HashMap[V, nullable V]
-		var visited = new HashMap[V, Bool]
-		var w: nullable V
+		var visited = new HashSet[V]
+		var w: nullable V = null
 		pred[u] = null
-		queue.add(u)
-		loop
+		while not queue.is_empty do
 			w = queue.take
-			if not visited.get_or_default(w, false) then
-				visited[w] = true
+			if not visited.has(w) then
+				visited.add(w)
 				if w == v then break
 				for wp in successors(w) do
 					if not pred.keys.has(wp) then
@@ -267,7 +250,6 @@ abstract class AbstractDigraph[V: Object]
 					end
 				end
 			end
-			if queue.is_empty then break
 		end
 		if w != v then
 			return null
@@ -289,16 +271,15 @@ abstract class AbstractDigraph[V: Object]
 	# symmetric, i.e. we may have `dist(u, v) != dist(v, u)`.
 	fun distance(u, v: V): nullable Int
 	do
-		var queue = (new Array[V]).as_fifo
+		var queue = new List[V].from([u]).as_fifo
 		var dist = new HashMap[V, Int]
-		var visited = new HashMap[V, Bool]
+		var visited = new HashSet[V]
 		var w: nullable V
 		dist[u] = 0
-		queue.add(u)
-		loop
+		while not queue.is_empty do
 			w = queue.take
-			if not visited.get_or_default(w, false) then
-				visited[w] = true
+			if not visited.has(w) then
+				visited.add(w)
 				if w == v then break
 				for wp in successors(w) do
 					if not dist.keys.has(wp) then
@@ -307,7 +288,6 @@ abstract class AbstractDigraph[V: Object]
 					end
 				end
 			end
-			if queue.is_empty then break
 		end
 		return dist.get_or_null(v)
 	end
@@ -413,10 +393,7 @@ class HashMapDigraph[V: Object]
 		end
 	end
 
-	redef fun has_vertex(u: V): Bool
-	do
-		return pred_map.keys.has(u)
-	end
+	redef fun has_vertex(u: V): Bool do return pred_map.keys.has(u)
 
 	redef fun remove_vertex(u: V)
 	do
@@ -444,10 +421,7 @@ class HashMapDigraph[V: Object]
 		end
 	end
 
-	redef fun has_arc(u, v: V): Bool
-	do
-		return succ_map[u].has(v)
-	end
+	redef fun has_arc(u, v: V): Bool do return succ_map[u].has(v)
 
 	redef fun remove_arc(u: V, v: V)
 	do
@@ -476,7 +450,7 @@ class HashMapDigraph[V: Object]
 		end
 	end
 
-	redef fun vertices: RemovableCollection[V]
+	redef fun vertices: Collection[V]
 	do
 		return succ_map.keys
 	end
@@ -515,10 +489,7 @@ class ArrayDigraph[V: Object]
 		end
 	end
 
-	redef fun has_vertex(u: V)
-	do
-		return vertex_to_index.keys.has(u)
-	end
+	redef fun has_vertex(u: V) do return vertex_to_index.keys.has(u)
 
 	redef fun remove_vertex(u: V)
 	do
@@ -578,10 +549,7 @@ class ArrayDigraph[V: Object]
 			do if matrix[ui][i] then index_to_vertex[i]]
 	end
 
-	redef fun vertices: RemovableCollection[V]
-	do
-		return vertex_to_index.keys
-	end
+	redef fun vertices: Collection[V] do return vertex_to_index.keys
 
 	redef fun arcs: Array[Arc[V]]
 	do
@@ -589,18 +557,5 @@ class ArrayDigraph[V: Object]
 		     do for j in [0..num_vertices[
 		     do if matrix[i][j] then
 			new Arc[V](index_to_vertex[i], index_to_vertex[j])]
-	end
-end
-
-private class QueuePair[V]
-	var vertex: V
-	var pred: nullable V
-	redef fun to_s: String
-	do
-		if pred == null then
-			return "{vertex.to_s}"
-		else
-			return "{pred.to_s} -> {vertex.to_s}"
-		end
 	end
 end
