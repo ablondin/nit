@@ -1,6 +1,6 @@
 import digraph
 
-var g = new HashMapDigraph[String]
+var g = new Digraph[String]
 g.add_vertex("a")
 g.add_vertex("b")
 g.add_vertex("c")
@@ -14,8 +14,7 @@ g.add_arc("c", "d")
 g.add_arc("d", "a")
 g.add_arc("d", "e")
 
-var path = g.a_shortest_path("a", "e")
-if path != null then print(path) else print "null"
+print(g.a_shortest_path("a", "e").to_s)
 
 for u in "abcde" do
 	for v in "abcde" do
