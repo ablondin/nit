@@ -4,7 +4,7 @@
 module abstract_digraph
 
 # An arc of a digraph
-class Arc[V]
+class Arc[V, L]
 	# The source of the arc
 	#
 	# ~~~
@@ -21,11 +21,14 @@ class Arc[V]
 	# ~~~
 	var target: V
 
-	redef fun to_s: String do return "({source.to_s}, {target.to_s})"
+	# Returns the value stored in the arc
+	var value: L
+
+	redef fun to_s: String do return "({source or else "NULL"}, {target or else "NULL"}, {value or else "NULL"})"
 end
 
 # Interface for digraphs
-abstract class Digraph[V]
+abstract class ReadonlyDigraph[V, L]
 
 	## ---------------- ##
 	## Abstract methods ##
@@ -58,21 +61,6 @@ abstract class Digraph[V]
 	# ~~~
 	fun num_arcs: Int is abstract
 
-	# Adds the vertex `u` to this graph.
-	#
-	# If `u` already belongs to the graph, then nothing happens.
-	#
-	# ~~~
-	# import digraph
-	# var g = new HashMapDigraph[Int] # Or any class implementing Digraph
-	# g.add_vertex(0)
-	# assert g.has_vertex(0)
-	# assert not g.has_vertex(1)
-	# g.add_vertex(1)
-	# assert g.num_vertices == 2
-	# ~~~
-	fun add_vertex(u: V) is abstract
-
 	# Returns true if and only if `u` exists in this graph.
 	#
 	# ~~~
@@ -87,34 +75,11 @@ abstract class Digraph[V]
 	# ~~~
 	fun has_vertex(u: V): Bool is abstract
 
-	# Removes the vertex `u` from this graph and all its incident arcs.
-	#
-	# If the vertex does not exist in the graph, then nothing happens.
-	#
-	# ~~~
-	# import digraph
-	# var g = new HashMapDigraph[Int]
-	# g.add_vertex(0)
-	# g.add_vertex(1)
-	# assert g.has_vertex(0)
-	# g.remove_vertex(0)
-	# assert not g.has_vertex(0)
-	# ~~~
-	fun remove_vertex(u: V) is abstract
-
-	# Adds the arc `(u,v)` to this graph.
-	#
-	# If the arc already exists in the graph, then nothing happens.
-	# If vertex `u` or vertex `v` do not exist in the graph, they are added.
-	fun add_arc(u, v: V) is abstract
-
 	# Returns true if and only if `(u,v)` is an arc in this graph.
 	fun has_arc(u, v: V): Bool is abstract
 
-	# Removes the arc `(u,v)` from this graph.
-	#
-	# If the arc does not exist in the graph, then nothing happens.
-	fun remove_arc(u, v: V) is abstract
+	# Returns true if and only if `(u,v)` is an arc in this graph with label `l`.
+	fun has_labelled_arc(u, v: V, l: L): Bool is abstract
 
 	# Returns the predecessors of `u`.
 	#
@@ -130,45 +95,21 @@ abstract class Digraph[V]
 	fun vertices: Collection[V] is abstract
 
 	# Returns the arcs of this graph.
-	fun arcs: Collection[Arc[V]] is abstract
-
-	## -------------------- ##
-	## Non abstract methods ##
-	## -------------------- ##
-
-	## ------------ ##
-	## Neighborhood ##
-	## ------------ ##
-
-	# Returns true if and only if `u` is a predecessor of `v`.
-	fun is_predecessor(u, v: V): Bool do return has_arc(u, v)
-
-	# Returns true if and only if `u` is a successor of `v`.
-	fun is_successor(u, v: V): Bool do return has_arc(v, u)
+	fun arcs: Collection[Arc[V, L]] is abstract
 
 	# Returns the incoming arcs of vertex `u`.
 	#
 	# If `u` is not in this graph, an empty array is returned.
-	fun incoming_arcs(u: V): Array[Arc[V]]
-	do
-		var arcs = new Array[Arc[V]]
-		for v in successors(u) do
-			arcs.add(new Arc[V](u, v))
-		end
-		return arcs
-	end
+	fun incoming_arcs(u: V): Array[Arc[V, L]] is abstract
 
 	# Returns the outgoing arcs of vertex `u`.
 	#
 	# If `u` is not in this graph, an empty array is returned.
-	fun outgoing_arcs(u: V): Array[Arc[V]]
-	do
-		var arcs = new Array[Arc[V]]
-		for v in predecessors(u) do
-			arcs.add(new Arc[V](v, u))
-		end
-		return arcs
-	end
+	fun outgoing_arcs(u: V): Array[Arc[V, L]] is abstract
+
+	## -------------------- ##
+	## Non abstract methods ##
+	## -------------------- ##
 
 	## ---------------------- ##
 	## String representations ##
@@ -201,9 +142,15 @@ abstract class Digraph[V]
 		return s
 	end
 
-	# ------- #
-	# Degrees #
-	# ------- #
+	## ------------ ##
+	## Neighborhood ##
+	## ------------ ##
+
+	# Returns true if and only if `u` is a predecessor of `v`.
+	fun is_predecessor(u, v: V): Bool do return has_arc(u, v)
+
+	# Returns true if and only if `u` is a successor of `v`.
+	fun is_successor(u, v: V): Bool do return has_arc(v, u)
 
 	# Returns the number of arcs whose target is `u`.
 	fun in_degree(u: V): Int do return predecessors(u).length
@@ -303,7 +250,7 @@ abstract class Digraph[V]
 	# The weak connected components of a digraph are the usual
 	# connected components of its associated undirected graph,
 	# i.e. the graph obtained by replacing each arc by an edge.
-	fun weak_connected_components: DisjointSet[V]
+	fun weakly_connected_components: DisjointSet[V]
 	do
 		var components = new DisjointSet[V]
 		components.add_all(vertices)
@@ -374,4 +321,70 @@ abstract class Digraph[V]
 	private var tarjan_ancestor: HashMap[V, Int] is noinit
 	# True if and only if the vertex is in the stack
 	private var tarjan_in_stack: HashMap[V, Bool] is noinit
+end
+
+# Mutable digraph
+abstract class MutableDigraph[V, L]
+	super ReadonlyDigraph[V, L]
+
+	## ---------------- ##
+	## Abstract methods ##
+	## ---------------- ##
+
+	# Adds the vertex `u` to this graph.
+	#
+	# If `u` already belongs to the graph, then nothing happens.
+	#
+	# ~~~
+	# import digraph
+	# var g = new HashMapDigraph[Int] # Or any class implementing Digraph
+	# g.add_vertex(0)
+	# assert g.has_vertex(0)
+	# assert not g.has_vertex(1)
+	# g.add_vertex(1)
+	# assert g.num_vertices == 2
+	# ~~~
+	fun add_vertex(u: V) is abstract
+
+	# Removes the vertex `u` from this graph and all its incident arcs.
+	#
+	# If the vertex does not exist in the graph, then nothing happens.
+	#
+	# ~~~
+	# import digraph
+	# var g = new HashMapDigraph[Int]
+	# g.add_vertex(0)
+	# g.add_vertex(1)
+	# assert g.has_vertex(0)
+	# g.remove_vertex(0)
+	# assert not g.has_vertex(0)
+	# ~~~
+	fun remove_vertex(u: V) is abstract
+
+	# Adds the arc `(u,v)` to this graph.
+	#
+	# If the arc already exists in the graph, then nothing happens.
+	# If vertex `u` or vertex `v` do not exist in the graph, they are added.
+	fun add_arc(arc: Arc[V, L]) is abstract
+
+	# Removes the arc `(u,v)` from this graph.
+	#
+	# If the arc does not exist in the graph, then nothing happens.
+	fun remove_arc(u, v: V) is abstract
+
+	## -------------------- ##
+	## Non abstract methods ##
+	## -------------------- ##
+
+	# Adds all vertices of `vertices` to this digraph.
+	#
+	# If vertices appear more than once, they are only added once.
+	fun add_vertices(vertices: Collection[V])
+	do for u in vertices do add_vertex(u) end
+
+	# Adds all vertices of `vertices` to this digraph.
+	#
+	# If vertices appear more than once, they are only added once.
+	fun add_arcs(arcs: Collection[Arc[V, L]])
+	do for a in arcs do add_arc(a) end
 end

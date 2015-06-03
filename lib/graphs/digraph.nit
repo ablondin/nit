@@ -6,13 +6,13 @@ module digraph
 import abstract_digraph
 
 # A directed graph represented by hash maps
-class HashMapDigraph[V]
-	super Digraph[V]
+class HashMapDigraph[V, L]
+	super MutableDigraph[V, L]
 
 	# Attributes
 	#
-	private var pred_map = new HashMap[V, Array[V]]
-	private var succ_map = new HashMap[V, Array[V]]
+	private var pred_map = new HashMap[V, Array[Arc[V, L]]]
+	private var succ_map = new HashMap[V, Array[Arc[V, L]]]
 	private var number_of_arcs = 0
 
 	redef fun num_vertices: Int do return pred_map.keys.length end
@@ -21,11 +21,9 @@ class HashMapDigraph[V]
 
 	redef fun add_vertex(u: V)
 	do
-		if has_vertex(u) then
-			return
-		else
-			pred_map[u] = new Array[V]
-			succ_map[u] = new Array[V]
+		if not has_vertex(u) then
+			pred_map[u] = new Array[Arc[V, L]]
+			succ_map[u] = new Array[Arc[V, L]]
 		end
 	end
 
@@ -45,18 +43,20 @@ class HashMapDigraph[V]
 		end
 	end
 
-	redef fun add_arc(u, v: V)
+	redef fun add_arc(arc: Arc[V, L])
 	do
+		var u = arc.source
+		var v = arc.target
 		if not has_vertex(u) then add_vertex(u)
 		if not has_vertex(v) then add_vertex(v)
-		if not has_arc(u, v) then
-			succ_map[u].add(v)
-			pred_map[v].add(u)
+		if not has_arc(arc) then
+			succ_map[u].add(arc)
+			pred_map[v].add(arc)
 			number_of_arcs += 1
 		end
 	end
 
-	redef fun has_arc(u, v: V): Bool do return succ_map[u].has(v)
+	redef fun has_arc(u, v: V): Bool do return has_vertex(u) and has_vertex(v) and succ_map[u].has(v)
 
 	redef fun remove_arc(u: V, v: V)
 	do
@@ -103,8 +103,8 @@ class HashMapDigraph[V]
 end
 
 # A directed graph represented by a bidimensional array
-class ArrayDigraph[V]
-	super Digraph[V]
+class ArrayDigraph[V, L]
+	super MutableDigraph[V, L]
 
 	# Attributes
 	private var vertex_to_index = new HashMap[V, Int]
@@ -150,8 +150,10 @@ class ArrayDigraph[V]
 		end
 	end
 
-	redef fun add_arc(u, v: V)
+	redef fun add_arc(arc: Arc[V, L])
 	do
+		var u = arc.source
+		var v = arc.target
 		if not has_vertex(u) then add_vertex(u)
 		if not has_vertex(v) then add_vertex(v)
 		if not has_arc(u, v) then
@@ -189,7 +191,7 @@ class ArrayDigraph[V]
 
 	redef fun vertices: Collection[V] do return vertex_to_index.keys
 
-	redef fun arcs: Array[Arc[V]]
+	redef fun arcs: Array[Arc[V, L]]
 	do
 		return [for i in [0..num_vertices[
 		     do for j in [0..num_vertices[
