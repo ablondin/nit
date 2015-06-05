@@ -4,11 +4,11 @@
 module abstract_digraph
 
 # An arc of a digraph
-class Arc[V, L]
+class Arc[V, A]
 	# The source of the arc
 	#
 	# ~~~
-	# var arc = new Arc[Int](0, 1)
+	# var arc = new Arc[Int, nullable Int](0, 1)
 	# assert arc.source == 0
 	# ~~~
 	var source: V
@@ -16,19 +16,26 @@ class Arc[V, L]
 	# The target of the arc
 	#
 	# ~~~
-	# var arc = new Arc[Int](0, 1)
+	# var arc = new Arc[Int, nullable Int](0, 1)
 	# assert arc.target == 1
 	# ~~~
 	var target: V
 
 	# Returns the value stored in the arc
-	var value: L
+	#
+	# ~~~
+	# var arc = new Arc[Int, nullable Int](0, 1, 4)
+	# assert arc.value == 4
+	# arc = new Arc[Int, nullable Int](0, 1)
+	# assert arc.value == null
+	# ~~~
+	var value: nullable A is writable
 
 	redef fun to_s: String do return "({source or else "NULL"}, {target or else "NULL"}, {value or else "NULL"})"
 end
 
 # Interface for digraphs
-abstract class ReadonlyDigraph[V, L]
+abstract class AbstractDigraph[V, A]
 
 	## ---------------- ##
 	## Abstract methods ##
@@ -38,7 +45,7 @@ abstract class ReadonlyDigraph[V, L]
 	#
 	# ~~~
 	# import digraph
-	# var g = new HashMapDigraph[Int]
+	# var g = new HashMapDigraph[Int, nullable Int]
 	# g.add_vertex(0)
 	# g.add_vertex(1)
 	# assert g.num_vertices == 2
@@ -51,7 +58,7 @@ abstract class ReadonlyDigraph[V, L]
 	#
 	# ~~~
 	# import digraph
-	# var g = new HashMapDigraph[Int]
+	# var g = new HashMapDigraph[Int, nullable Int]
 	# g.add_arc(0, 1)
 	# assert g.num_arcs == 1
 	# g.add_arc(0, 1)
@@ -65,7 +72,7 @@ abstract class ReadonlyDigraph[V, L]
 	#
 	# ~~~
 	# import digraph
-	# var g = new HashMapDigraph[Int]
+	# var g = new HashMapDigraph[Int, nullable Int]
 	# g.add_vertex(1)
 	# assert g.has_vertex(1)
 	# assert not g.has_vertex(0)
@@ -76,36 +83,119 @@ abstract class ReadonlyDigraph[V, L]
 	fun has_vertex(u: V): Bool is abstract
 
 	# Returns true if and only if `(u,v)` is an arc in this graph.
+	#
+	# ~~~
+	# import digraph
+	# var g = new HashMapDigraph[Int, nullable Int]
+	# g.add_arc(0, 1)
+	# g.add_arc(1, 2)
+	# assert g.has_arc(0, 1)
+	# assert g.has_arc(1, 2)
+	# assert not g.has_arc(0, 2)
+	# ~~~
 	fun has_arc(u, v: V): Bool is abstract
 
-	# Returns true if and only if `(u,v)` is an arc in this graph with label `l`.
-	fun has_labelled_arc(u, v: V, l: L): Bool is abstract
+	# Returns the value of the arc `(u,v)` if it exists, otherwise returns NULL.
+	#
+	# ~~~
+	# import digraph
+	# var g = new HashMapDigraph[Int, nullable Int]
+	# g.add_arc(0, 1)
+	# g.add_arc(1, 2, 3)
+	# assert g.get_arc_value(0, 1) == null
+	# assert g.get_arc_value(1, 2) == 3
+	# ~~~
+	fun get_arc_value(u, v: V): nullable A is abstract
 
 	# Returns the predecessors of `u`.
 	#
-	# If `u` does not exist, then an empty collection is returned.
-	fun predecessors(u: V): Collection[V] is abstract
+	# If `u` does not exist, then it returns null.
+	#
+	# ~~~
+	# import digraph
+	# var g = new HashMapDigraph[Int, nullable Int]
+	# g.add_arc(0, 1)
+	# g.add_arc(1, 2)
+	# g.add_arc(0, 2)
+	# assert g.predecessors(2).has(0)
+	# assert g.predecessors(2).has(1)
+	# assert not g.predecessors(2).has(2)
+	# ~~~
+	fun predecessors(u: V): nullable Collection[V] is abstract
 
 	# Returns the successors of `u`.
 	#
 	# If `u` does not exist, then an empty collection is returned.
-	fun successors(u: V): Collection[V] is abstract
+	#
+	# ~~~
+	# import digraph
+	# var g = new HashMapDigraph[Int, nullable Int]
+	# g.add_arc(0, 1)
+	# g.add_arc(1, 2)
+	# g.add_arc(0, 2)
+	# assert not g.successors(0).has(0)
+	# assert g.successors(0).has(1)
+	# assert g.successors(0).has(2)
+	# ~~~
+	fun successors(u: V): nullable Collection[V] is abstract
 
 	# Returns the vertices of this graph.
+	#
+	# ~~~
+	# import digraph
+	# var g = new HashMapDigraph[Int, nullable Int]
+	# g.add_vertices([0,1,2,3])
+	# var s = new HashSet[Int].from([3,2,1,0])
+	# assert new HashSet[Int].from(g.vertices) == s
+	# g.add_arc(3, 4)
+	# s.add(4)
+	# assert new HashSet[Int].from(g.vertices) == s
+	# ~~~
 	fun vertices: Collection[V] is abstract
 
 	# Returns the arcs of this graph.
-	fun arcs: Collection[Arc[V, L]] is abstract
+	#
+	# ~~~
+	# import digraph
+	# var g = new HashMapDigraph[Int, nullable Int]
+	# g.add_arc(1, 3)
+	# g.add_arc(2, 3)
+	# for arc in g.arcs do
+	# 	g.has_arc(arc.source, arc.target)
+	# end
+	# ~~~
+	fun arcs: Collection[Arc[V, A]] is abstract
 
 	# Returns the incoming arcs of vertex `u`.
 	#
 	# If `u` is not in this graph, an empty array is returned.
-	fun incoming_arcs(u: V): Array[Arc[V, L]] is abstract
+	#
+	# ~~~
+	# import digraph
+	# var g = new HashMapDigraph[Int, nullable Int]
+	# g.add_arc(1, 3)
+	# g.add_arc(2, 3)
+	# for arc in g.incoming_arcs(3) do
+	# 	assert g.is_predecessor(arc.source, arc.target)
+	# end
+	# ~~~
+	fun incoming_arcs(u: V): nullable Collection[Arc[V, A]] is abstract
 
 	# Returns the outgoing arcs of vertex `u`.
 	#
 	# If `u` is not in this graph, an empty array is returned.
-	fun outgoing_arcs(u: V): Array[Arc[V, L]] is abstract
+	#
+	# ~~~
+	# import digraph
+	# var g = new HashMapDigraph[Int, nullable Int]
+	# g.add_arc(1, 3)
+	# g.add_arc(2, 3)
+	# g.add_arc(1, 2)
+	# for arc in g.outgoing_arcs(1) do
+	# 	assert g.is_successor(arc.target, arc.source)
+	# end
+	# ~~~
+	fun outgoing_arcs(u: V): nullable Collection[Arc[V, A]] is abstract
 
 	## -------------------- ##
 	## Non abstract methods ##
@@ -136,7 +226,14 @@ abstract class ReadonlyDigraph[V, L]
 		# Writing the arcs
 		for arc in arcs do
 			s += "   {arc.source.to_s.escape_to_dot} "
-			s += "-> {arc.target.to_s.escape_to_dot};\n"
+			s += "-> {arc.target.to_s.escape_to_dot} "
+			var value
+			if arc.value == null then
+				value = ""
+			else
+				value = arc.value.to_s.escape_to_dot
+			end
+			s += "[label=\"{value}\"];\n"
 		end
 		s += "\}"
 		return s
@@ -147,15 +244,50 @@ abstract class ReadonlyDigraph[V, L]
 	## ------------ ##
 
 	# Returns true if and only if `u` is a predecessor of `v`.
+	#
+	# ~~~
+	# import digraph
+	# var g = new HashMapDigraph[Int, nullable Int]
+	# g.add_arc(1, 3)
+	# assert g.is_predecessor(1, 3)
+	# assert not g.is_predecessor(3, 1)
+	# ~~~
 	fun is_predecessor(u, v: V): Bool do return has_arc(u, v)
 
 	# Returns true if and only if `u` is a successor of `v`.
+	#
+	# ~~~
+	# import digraph
+	# var g = new HashMapDigraph[Int, nullable Int]
+	# g.add_arc(1, 3)
+	# assert not g.is_successor(1, 3)
+	# assert g.is_successor(3, 1)
+	# ~~~
 	fun is_successor(u, v: V): Bool do return has_arc(v, u)
 
 	# Returns the number of arcs whose target is `u`.
+	#
+	# ~~~
+	# import digraph
+	# var g = new HashMapDigraph[Int, nullable Int]
+	# g.add_arc(1, 3)
+	# g.add_arc(2, 3)
+	# assert g.in_degree(3) == 2
+	# assert g.in_degree(1) == 0
+	# ~~~
 	fun in_degree(u: V): Int do return predecessors(u).length
 
 	# Returns the number of arcs whose source is `u`.
+	#
+	# ~~~
+	# import digraph
+	# var g = new HashMapDigraph[Int, nullable Int]
+	# g.add_arc(1, 2)
+	# g.add_arc(1, 3)
+	# g.add_arc(2, 3)
+	# assert g.out_degree(3) == 0
+	# assert g.out_degree(1) == 2
+	# ~~~
 	fun out_degree(u: V): Int do return successors(u).length
 
 	# ------------------ #
@@ -163,24 +295,56 @@ abstract class ReadonlyDigraph[V, L]
 	# ------------------ #
 
 	# Returns true if and only if `vertices` is a path of this digraph.
-	fun is_path(vertices: SequenceRead[V]): Bool
+	#
+	# ~~~
+	# import digraph
+	# var g = new HashMapDigraph[Int, nullable Int]
+	# g.add_arc(1, 2)
+	# g.add_arc(2, 3)
+	# g.add_arc(3, 4)
+	# assert g.is_path([1,2,3])
+	# assert not g.is_path([1,3,3])
+	# ~~~
+	fun is_path(path: SequenceRead[V]): Bool
 	do
-		for i in [0..vertices.length[ do
-			if not has_arc(vertices[i], vertices[i + 1]) then return false
+		for i in [0..path.length - 1[ do
+			if not has_arc(path[i], path[i + 1]) then return false
 		end
 		return true
 	end
 
 	# Returns true if and only if `vertices` is a circuit of this digraph.
-	fun is_circuit(vertices: SequenceRead[V]): Bool
+	#
+	# ~~~
+	# import digraph
+	# var g = new HashMapDigraph[Int, nullable Int]
+	# g.add_arc(1, 2)
+	# g.add_arc(2, 3)
+	# g.add_arc(3, 1)
+	# assert g.is_circuit([1,2,3,1])
+	# assert not g.is_circuit([1,3,2,1])
+	# ~~~
+	fun is_circuit(path: SequenceRead[V]): Bool
 	do
-		return vertices.is_empty or (is_path(vertices) and vertices.first == vertices.last)
+		return path.is_empty or (is_path(path) and path.first == path.last)
 	end
 
-	# Returns a shortest path between vertices `u` and `v`.
+	# Returns a shortest path from vertex `u` to `v`.
 	#
 	# If no path exists between `u` and `v`, it returns `null`.
-	fun a_shortest_path(u, v: V): nullable List[V]
+	#
+	# ~~~
+	# import digraph
+	# var g = new HashMapDigraph[Int, nullable Int]
+	# g.add_arc(1, 2)
+	# g.add_arc(2, 3)
+	# g.add_arc(3, 4)
+	# assert g.a_shortest_path(1, 4).length == 4
+	# g.add_arc(1, 3)
+	# assert g.a_shortest_path(1, 4).length == 3
+	# assert g.a_shortest_path(4, 1) == null
+	# ~~~
+	fun a_shortest_path(u, v: V): nullable Sequence[V]
 	do
 		var queue = new List[V].from([u]).as_fifo
 		var pred = new HashMap[V, nullable V]
@@ -218,6 +382,18 @@ abstract class ReadonlyDigraph[V, L]
 	#
 	# If no path exists between `u` and `v`, it returns null. It is not
 	# symmetric, i.e. we may have `dist(u, v) != dist(v, u)`.
+	#
+	# ~~~
+	# import digraph
+	# var g = new HashMapDigraph[Int, nullable Int]
+	# g.add_arc(1, 2)
+	# g.add_arc(2, 3)
+	# g.add_arc(3, 4)
+	# assert g.distance(1, 4) == 3
+	# g.add_arc(1, 3)
+	# assert g.distance(1, 4) == 2
+	# assert g.distance(4, 1) == null
+	# ~~~
 	fun distance(u, v: V): nullable Int
 	do
 		var queue = new List[V].from([u]).as_fifo
@@ -250,6 +426,15 @@ abstract class ReadonlyDigraph[V, L]
 	# The weak connected components of a digraph are the usual
 	# connected components of its associated undirected graph,
 	# i.e. the graph obtained by replacing each arc by an edge.
+	#
+	# ~~~
+	# import digraph
+	# var g = new HashMapDigraph[Int, nullable Int]
+	# g.add_arc(1, 2)
+	# g.add_arc(2, 3)
+	# g.add_arc(4, 5)
+	# assert g.weakly_connected_components.number_of_subsets == 2
+	# ~~~
 	fun weakly_connected_components: DisjointSet[V]
 	do
 		var components = new DisjointSet[V]
@@ -267,6 +452,19 @@ abstract class ReadonlyDigraph[V, L]
 	# and there exists a path from `v` to `u`.
 	#
 	# This is computed in linear time (Tarjan's algorithm).
+	#
+	# ~~~
+	# import digraph
+	# var g = new HashMapDigraph[Int, nullable Int]
+	# g.add_arc(1, 2)
+	# g.add_arc(2, 3)
+	# g.add_arc(3, 1)
+	# g.add_arc(3, 4)
+	# g.add_arc(4, 5)
+	# g.add_arc(5, 6)
+	# g.add_arc(6, 5)
+	# assert g.strongly_connected_components.number_of_subsets == 3
+	# ~~~
 	fun strongly_connected_components: DisjointSet[V]
 	do
 		sccs = new DisjointSet[V]
@@ -282,6 +480,18 @@ abstract class ReadonlyDigraph[V, L]
 		return sccs
 	end
 
+	# The strongly connected components computed in Tarjan's algorithm
+	private var sccs: DisjointSet[V] is noinit
+	# An index used for Tarjan's algorithm
+	private var tarjan_index: Int is noinit
+	# A stack used for Tarjan's algorithm
+	private var tarjan_stack: Queue[V] is noinit
+	# A map associating with each vertex its index
+	private var tarjan_vertex_to_index: HashMap[V, Int] is noinit
+	# A map associating with each vertex its ancestor in Tarjan's algorithm
+	private var tarjan_ancestor: HashMap[V, Int] is noinit
+	# True if and only if the vertex is in the stack
+	private var tarjan_in_stack: HashMap[V, Bool] is noinit
 	# The recursive part of Tarjan's algorithm
 	private fun tarjan(u: V)
 	do
@@ -308,24 +518,11 @@ abstract class ReadonlyDigraph[V, L]
 			end
 		end
 	end
-
-	# The strongly connected components computed in Tarjan's algorithm
-	private var sccs: DisjointSet[V] is noinit
-	# An index used for Tarjan's algorithm
-	private var tarjan_index: Int is noinit
-	# A stack used for Tarjan's algorithm
-	private var tarjan_stack: Queue[V] is noinit
-	# A map associating with each vertex its index
-	private var tarjan_vertex_to_index: HashMap[V, Int] is noinit
-	# A map associating with each vertex its ancestor in Tarjan's algorithm
-	private var tarjan_ancestor: HashMap[V, Int] is noinit
-	# True if and only if the vertex is in the stack
-	private var tarjan_in_stack: HashMap[V, Bool] is noinit
 end
 
 # Mutable digraph
-abstract class MutableDigraph[V, L]
-	super ReadonlyDigraph[V, L]
+abstract class MutableDigraph[V, A]
+	super AbstractDigraph[V, A]
 
 	## ---------------- ##
 	## Abstract methods ##
@@ -337,7 +534,7 @@ abstract class MutableDigraph[V, L]
 	#
 	# ~~~
 	# import digraph
-	# var g = new HashMapDigraph[Int] # Or any class implementing Digraph
+	# var g = new HashMapDigraph[Int, nullable Int]
 	# g.add_vertex(0)
 	# assert g.has_vertex(0)
 	# assert not g.has_vertex(1)
@@ -352,7 +549,7 @@ abstract class MutableDigraph[V, L]
 	#
 	# ~~~
 	# import digraph
-	# var g = new HashMapDigraph[Int]
+	# var g = new HashMapDigraph[Int, nullable Int]
 	# g.add_vertex(0)
 	# g.add_vertex(1)
 	# assert g.has_vertex(0)
@@ -363,13 +560,49 @@ abstract class MutableDigraph[V, L]
 
 	# Adds the arc `(u,v)` to this graph.
 	#
-	# If the arc already exists in the graph, then nothing happens.
+	# If there is an arc from `u` to `v` in this graph, then nothing happens
+	# (even if the value is different).
 	# If vertex `u` or vertex `v` do not exist in the graph, they are added.
-	fun add_arc(arc: Arc[V, L]) is abstract
+	#
+	# ~~~
+	# import digraph
+	# var g = new HashMapDigraph[Int, nullable Int]
+	# g.add_arc(0, 1)
+	# g.add_arc(1, 2)
+	# assert g.has_arc(0, 1)
+	# assert g.has_arc(1, 2)
+	# assert not g.has_arc(1, 0)
+	# ~~~
+	fun add_arc(u, v: V, l: nullable A) is abstract
+
+	# Changes the value of the arc `(u,v)`.
+	#
+	# If the arc does not exist in the graph, it is created.
+	#
+	# ~~~
+	# import digraph
+	# var g = new HashMapDigraph[Int, nullable Int]
+	# g.add_arc(0, 1, 3)
+	# assert g.get_arc_value(0, 1) == 3
+	# g.change_arc_value(0, 1, 4)
+	# assert g.get_arc_value(0, 1) == 4
+	# ~~~
+	fun change_arc_value(u, v: V, l: A) is abstract
 
 	# Removes the arc `(u,v)` from this graph.
 	#
 	# If the arc does not exist in the graph, then nothing happens.
+	#
+	# ~~~
+	# import digraph
+	# var g = new HashMapDigraph[Int, nullable Int]
+	# g.add_arc(0, 1)
+	# assert g.num_arcs == 1
+	# g.remove_arc(0, 1)
+	# assert g.num_arcs == 0
+	# g.remove_arc(0, 1)
+	# assert g.num_arcs == 0
+	# ~~~
 	fun remove_arc(u, v: V) is abstract
 
 	## -------------------- ##
@@ -379,12 +612,36 @@ abstract class MutableDigraph[V, L]
 	# Adds all vertices of `vertices` to this digraph.
 	#
 	# If vertices appear more than once, they are only added once.
-	fun add_vertices(vertices: Collection[V])
-	do for u in vertices do add_vertex(u) end
-
-	# Adds all vertices of `vertices` to this digraph.
 	#
-	# If vertices appear more than once, they are only added once.
-	fun add_arcs(arcs: Collection[Arc[V, L]])
-	do for a in arcs do add_arc(a) end
+	# ~~~
+	# import digraph
+	# var g = new HashMapDigraph[Int, nullable Int]
+	# g.add_vertices([0,1,2,3])
+	# assert g.num_vertices == 4
+	# g.add_vertices([2,3,4,5])
+	# assert g.num_vertices == 6
+	# ~~~
+	fun add_vertices(vertices: Collection[V])
+	do
+		for u in vertices do add_vertex(u)
+	end
+
+	# Adds all arcs of `arcs` to this digraph.
+	#
+	# If arcs appear more than once, they are only added once.
+	#
+	# ~~~
+	# import digraph
+	# var g = new HashMapDigraph[Int, nullable Int]
+	# var arcs = new Array[Arc[Int, nullable Int]]
+	# arcs.add(new Arc[Int, nullable Int](0, 1))
+	# arcs.add(new Arc[Int, nullable Int](1, 2))
+	# arcs.add(new Arc[Int, nullable Int](1, 2))
+	# g.add_arcs(arcs)
+	# assert g.num_arcs == 2
+	# ~~~
+	fun add_arcs(arcs: Collection[Arc[V, A]])
+	do
+		for a in arcs do add_arc(a.source, a.target, a.value)
+	end
 end
