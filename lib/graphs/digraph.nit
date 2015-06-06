@@ -47,8 +47,11 @@ class HashMapDigraph[V, A]
 	do
 		if not has_vertex(u) then add_vertex(u)
 		if not has_vertex(v) then add_vertex(v)
-		if not has_arc(u, v) then
-			var arc = new Arc[V, A](u, v, l)
+		var arc = arc(u, v)
+		if arc != null then
+			arc.value = l
+		else
+			arc = new Arc[V, A](u, v, l)
 			incoming_arcs_map[v].add(arc)
 			outgoing_arcs_map[u].add(arc)
 			number_of_arcs += 1
@@ -57,33 +60,33 @@ class HashMapDigraph[V, A]
 
 	redef fun has_arc(u, v: V): Bool
 	do
-		if has_vertex(u) and has_vertex(v) then
-			for arc in outgoing_arcs_map[u] do
-				if arc.target == v then return true
-			end
-		end
-		return false
+		return arc(u, v) != null
 	end
 
-	redef fun get_arc_value(u, v: V): nullable A do
-		if has_vertex(u) and has_vertex(v) then
+	redef fun arc(u, v: V): nullable Arc[V, A]
+	do
+		if has_vertex(u) then
 			for arc in outgoing_arcs_map[u] do
-				if arc.target == v then return arc.value
+				if arc.target == v then return arc
 			end
 		end
 		return null
 	end
 
+	redef fun arc_value(u, v: V): nullable A
+	do
+		var arc = arc(u, v)
+		if arc != null then return arc.value else return null
+	end
+
 	redef fun remove_arc(u: V, v: V)
 	do
-		if has_vertex(u) and has_vertex(v) then
-			for arc in outgoing_arcs_map[u] do
-				if arc.target == v then
-					outgoing_arcs_map[u].remove(arc)
-					incoming_arcs_map[v].remove(arc)
-					number_of_arcs -= 1
-					return
-				end
+		if has_vertex(u) then
+			var arc = arc(u, v)
+			if arc != null then
+				outgoing_arcs_map[u].remove(arc)
+				incoming_arcs_map[v].remove(arc)
+				number_of_arcs -= 1
 			end
 		end
 	end
@@ -134,14 +137,13 @@ class HashMapDigraph[V, A]
 		end
 	end
 
-	redef fun change_arc_value(u, v: V, l: A)
+	redef fun arc_value=(u, v: V, l: A)
 	do
-		if not has_arc(u, v) then
+		var arc = arc(u, v)
+		if arc == null then
 			add_arc(u, v, l)
 		else
-			for arc in outgoing_arcs_map[u] do
-				if arc.source == u then arc.value = l
-			end
+			arc.value = l
 		end
 	end
 end

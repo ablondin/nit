@@ -95,6 +95,20 @@ abstract class AbstractDigraph[V, A]
 	# ~~~
 	fun has_arc(u, v: V): Bool is abstract
 
+	# Returns the arc whose source and target are `u` and `v`.
+	#
+	# If the arc does not exist, it returns null.
+	#
+	# ~~~
+	# import digraph
+	# var g = new HashMapDigraph[Int, nullable Int]
+	# g.add_arc(0, 1, 4)
+	# assert g.arc(0, 1).source == 0
+	# assert g.arc(0, 1).target == 1
+	# assert g.arc(0, 1).value == 4
+	# ~~~
+	fun arc(u, v: V): nullable Arc[V, A] is abstract
+
 	# Returns the value of the arc `(u,v)` if it exists, otherwise returns NULL.
 	#
 	# ~~~
@@ -102,10 +116,10 @@ abstract class AbstractDigraph[V, A]
 	# var g = new HashMapDigraph[Int, nullable Int]
 	# g.add_arc(0, 1)
 	# g.add_arc(1, 2, 3)
-	# assert g.get_arc_value(0, 1) == null
-	# assert g.get_arc_value(1, 2) == 3
+	# assert g.arc_value(0, 1) == null
+	# assert g.arc_value(1, 2) == 3
 	# ~~~
-	fun get_arc_value(u, v: V): nullable A is abstract
+	fun arc_value(u, v: V): nullable A is abstract
 
 	# Returns the predecessors of `u`.
 	#
@@ -560,18 +574,21 @@ abstract class MutableDigraph[V, A]
 
 	# Adds the arc `(u,v)` to this graph.
 	#
-	# If there is an arc from `u` to `v` in this graph, then nothing happens
-	# (even if the value is different).
+	# If there is an arc from `u` to `v` in this graph, then the value is
+	# overwritten.
 	# If vertex `u` or vertex `v` do not exist in the graph, they are added.
 	#
 	# ~~~
 	# import digraph
 	# var g = new HashMapDigraph[Int, nullable Int]
 	# g.add_arc(0, 1)
-	# g.add_arc(1, 2)
+	# g.add_arc(1, 2, 4)
 	# assert g.has_arc(0, 1)
 	# assert g.has_arc(1, 2)
+	# assert g.arc_value(1, 2) == 4
 	# assert not g.has_arc(1, 0)
+	# g.add_arc(1, 2, 3)
+	# assert g.arc_value(1, 2) == 3
 	# ~~~
 	fun add_arc(u, v: V, l: nullable A) is abstract
 
@@ -583,11 +600,11 @@ abstract class MutableDigraph[V, A]
 	# import digraph
 	# var g = new HashMapDigraph[Int, nullable Int]
 	# g.add_arc(0, 1, 3)
-	# assert g.get_arc_value(0, 1) == 3
-	# g.change_arc_value(0, 1, 4)
-	# assert g.get_arc_value(0, 1) == 4
+	# assert g.arc_value(0, 1) == 3
+	# g.arc_value(0, 1) = 4
+	# assert g.arc_value(0, 1) == 4
 	# ~~~
-	fun change_arc_value(u, v: V, l: A) is abstract
+	fun arc_value=(u, v: V, l: A) is abstract
 
 	# Removes the arc `(u,v)` from this graph.
 	#
