@@ -4,7 +4,7 @@
 module abstract_digraph
 
 # Interface for digraphs
-abstract class AbstractDigraph[V: Object]
+abstract class Digraph[V: Object]
 
 	## ---------------- ##
 	## Abstract methods ##
@@ -14,7 +14,7 @@ abstract class AbstractDigraph[V: Object]
 	#
 	# ~~~
 	# import digraph
-	# var g = new HashMapDigraph[Int]
+	# var g = new HashDigraph[Int]
 	# g.add_vertex(0)
 	# g.add_vertex(1)
 	# assert g.num_vertices == 2
@@ -27,7 +27,7 @@ abstract class AbstractDigraph[V: Object]
 	#
 	# ~~~
 	# import digraph
-	# var g = new HashMapDigraph[Int]
+	# var g = new HashDigraph[Int]
 	# g.add_arc(0, 1)
 	# assert g.num_arcs == 1
 	# g.add_arc(0, 1)
@@ -41,7 +41,7 @@ abstract class AbstractDigraph[V: Object]
 	#
 	# ~~~
 	# import digraph
-	# var g = new HashMapDigraph[Int]
+	# var g = new HashDigraph[Int]
 	# g.add_vertex(1)
 	# assert g.has_vertex(1)
 	# assert not g.has_vertex(0)
@@ -55,7 +55,7 @@ abstract class AbstractDigraph[V: Object]
 	#
 	# ~~~
 	# import digraph
-	# var g = new HashMapDigraph[Int]
+	# var g = new HashDigraph[Int]
 	# g.add_arc(0, 1)
 	# g.add_arc(1, 2)
 	# assert g.has_arc(0, 1)
@@ -70,7 +70,7 @@ abstract class AbstractDigraph[V: Object]
 	#
 	# ~~~
 	# import digraph
-	# var g = new HashMapDigraph[Int]
+	# var g = new HashDigraph[Int]
 	# g.add_arc(0, 1)
 	# g.add_arc(1, 2)
 	# g.add_arc(0, 2)
@@ -86,7 +86,7 @@ abstract class AbstractDigraph[V: Object]
 	#
 	# ~~~
 	# import digraph
-	# var g = new HashMapDigraph[Int]
+	# var g = new HashDigraph[Int]
 	# g.add_arc(0, 1)
 	# g.add_arc(1, 2)
 	# g.add_arc(0, 2)
@@ -100,7 +100,7 @@ abstract class AbstractDigraph[V: Object]
 	#
 	# ~~~
 	# import digraph
-	# var g = new HashMapDigraph[Int]
+	# var g = new HashDigraph[Int]
 	# g.add_arc(0, 1)
 	# g.add_arc(0, 2)
 	# g.add_arc(1, 2)
@@ -124,7 +124,7 @@ abstract class AbstractDigraph[V: Object]
 	#
 	# ~~~
 	# import digraph
-	# assert (new HashMapDigraph[Int]).is_empty
+	# assert (new HashDigraph[Int]).is_empty
 	# ~~~
 	fun is_empty: Bool do return num_vertices == 0 and num_arcs == 0
 
@@ -132,7 +132,7 @@ abstract class AbstractDigraph[V: Object]
 	#
 	# ~~~
 	# import digraph
-	# var g = new HashMapDigraph[Int]
+	# var g = new HashDigraph[Int]
 	# g.add_vertices([0,2,4,5])
 	# assert g.vertices.length == 4
 	# ~~~
@@ -142,7 +142,7 @@ abstract class AbstractDigraph[V: Object]
 	#
 	# ~~~
 	# import digraph
-	# var g = new HashMapDigraph[Int]
+	# var g = new HashDigraph[Int]
 	# g.add_arc(0, 1)
 	# g.add_arc(0, 2)
 	# g.add_arc(1, 2)
@@ -156,7 +156,7 @@ abstract class AbstractDigraph[V: Object]
 	#
 	# ~~~
 	# import digraph
-	# var g = new HashMapDigraph[Int]
+	# var g = new HashDigraph[Int]
 	# g.add_arc(1, 3)
 	# g.add_arc(2, 3)
 	# assert g.arcs.length == 2
@@ -169,7 +169,7 @@ abstract class AbstractDigraph[V: Object]
 	#
 	# ~~~
 	# import digraph
-	# var g = new HashMapDigraph[Int]
+	# var g = new HashDigraph[Int]
 	# g.add_arc(1, 3)
 	# g.add_arc(2, 3)
 	# for arc in g.incoming_arcs(3) do
@@ -191,7 +191,7 @@ abstract class AbstractDigraph[V: Object]
 	#
 	# ~~~
 	# import digraph
-	# var g = new HashMapDigraph[Int]
+	# var g = new HashDigraph[Int]
 	# g.add_arc(1, 3)
 	# g.add_arc(2, 3)
 	# g.add_arc(1, 2)
@@ -247,7 +247,7 @@ abstract class AbstractDigraph[V: Object]
 	#
 	# ~~~
 	# import digraph
-	# var g = new HashMapDigraph[Int]
+	# var g = new HashDigraph[Int]
 	# g.add_arc(1, 3)
 	# assert g.is_predecessor(1, 3)
 	# assert not g.is_predecessor(3, 1)
@@ -258,7 +258,7 @@ abstract class AbstractDigraph[V: Object]
 	#
 	# ~~~
 	# import digraph
-	# var g = new HashMapDigraph[Int]
+	# var g = new HashDigraph[Int]
 	# g.add_arc(1, 3)
 	# assert not g.is_successor(1, 3)
 	# assert g.is_successor(3, 1)
@@ -269,7 +269,7 @@ abstract class AbstractDigraph[V: Object]
 	#
 	# ~~~
 	# import digraph
-	# var g = new HashMapDigraph[Int]
+	# var g = new HashDigraph[Int]
 	# g.add_arc(1, 3)
 	# g.add_arc(2, 3)
 	# assert g.in_degree(3) == 2
@@ -281,7 +281,7 @@ abstract class AbstractDigraph[V: Object]
 	#
 	# ~~~
 	# import digraph
-	# var g = new HashMapDigraph[Int]
+	# var g = new HashDigraph[Int]
 	# g.add_arc(1, 2)
 	# g.add_arc(1, 3)
 	# g.add_arc(2, 3)
@@ -298,7 +298,7 @@ abstract class AbstractDigraph[V: Object]
 	#
 	# ~~~
 	# import digraph
-	# var g = new HashMapDigraph[Int]
+	# var g = new HashDigraph[Int]
 	# g.add_arc(1, 2)
 	# g.add_arc(2, 3)
 	# g.add_arc(3, 4)
@@ -317,7 +317,7 @@ abstract class AbstractDigraph[V: Object]
 	#
 	# ~~~
 	# import digraph
-	# var g = new HashMapDigraph[Int]
+	# var g = new HashDigraph[Int]
 	# g.add_arc(1, 2)
 	# g.add_arc(2, 3)
 	# g.add_arc(3, 1)
@@ -335,7 +335,7 @@ abstract class AbstractDigraph[V: Object]
 	#
 	# ~~~
 	# import digraph
-	# var g = new HashMapDigraph[Int]
+	# var g = new HashDigraph[Int]
 	# g.add_arc(1, 2)
 	# g.add_arc(2, 3)
 	# g.add_arc(3, 4)
@@ -385,7 +385,7 @@ abstract class AbstractDigraph[V: Object]
 	#
 	# ~~~
 	# import digraph
-	# var g = new HashMapDigraph[Int]
+	# var g = new HashDigraph[Int]
 	# g.add_arc(1, 2)
 	# g.add_arc(2, 3)
 	# g.add_arc(3, 4)
@@ -429,7 +429,7 @@ abstract class AbstractDigraph[V: Object]
 	#
 	# ~~~
 	# import digraph
-	# var g = new HashMapDigraph[Int]
+	# var g = new HashDigraph[Int]
 	# g.add_arc(1, 2)
 	# g.add_arc(2, 3)
 	# g.add_arc(4, 5)
@@ -455,7 +455,7 @@ abstract class AbstractDigraph[V: Object]
 	#
 	# ~~~
 	# import digraph
-	# var g = new HashMapDigraph[Int]
+	# var g = new HashDigraph[Int]
 	# g.add_arc(1, 2)
 	# g.add_arc(2, 3)
 	# g.add_arc(3, 1)
@@ -525,7 +525,7 @@ class ArcsIterator[V: Object]
 	super Iterator[Array[V]]
 
 	# The graph whose arcs are iterated over
-	var graph: AbstractDigraph[V]
+	var graph: Digraph[V]
 	# Attributes
 	#
 	private var sources_iterator: Iterator[V] is noinit
@@ -563,7 +563,7 @@ end
 
 # Mutable digraph
 abstract class MutableDigraph[V: Object]
-	super AbstractDigraph[V]
+	super Digraph[V]
 
 	## ---------------- ##
 	## Abstract methods ##
@@ -575,7 +575,7 @@ abstract class MutableDigraph[V: Object]
 	#
 	# ~~~
 	# import digraph
-	# var g = new HashMapDigraph[Int]
+	# var g = new HashDigraph[Int]
 	# g.add_vertex(0)
 	# assert g.has_vertex(0)
 	# assert not g.has_vertex(1)
@@ -590,7 +590,7 @@ abstract class MutableDigraph[V: Object]
 	#
 	# ~~~
 	# import digraph
-	# var g = new HashMapDigraph[Int]
+	# var g = new HashDigraph[Int]
 	# g.add_vertex(0)
 	# g.add_vertex(1)
 	# assert g.has_vertex(0)
@@ -607,7 +607,7 @@ abstract class MutableDigraph[V: Object]
 	#
 	# ~~~
 	# import digraph
-	# var g = new HashMapDigraph[Int]
+	# var g = new HashDigraph[Int]
 	# g.add_arc(0, 1)
 	# g.add_arc(1, 2)
 	# assert g.has_arc(0, 1)
@@ -624,7 +624,7 @@ abstract class MutableDigraph[V: Object]
 	#
 	# ~~~
 	# import digraph
-	# var g = new HashMapDigraph[Int]
+	# var g = new HashDigraph[Int]
 	# g.add_arc(0, 1)
 	# assert g.num_arcs == 1
 	# g.remove_arc(0, 1)
@@ -644,7 +644,7 @@ abstract class MutableDigraph[V: Object]
 	#
 	# ~~~
 	# import digraph
-	# var g = new HashMapDigraph[Int]
+	# var g = new HashDigraph[Int]
 	# g.add_vertices([0,1,2,3])
 	# assert g.num_vertices == 4
 	# g.add_vertices([2,3,4,5])
@@ -661,7 +661,7 @@ abstract class MutableDigraph[V: Object]
 	#
 	# ~~~
 	# import digraph
-	# var g = new HashMapDigraph[Int]
+	# var g = new HashDigraph[Int]
 	# var arcs = [[0,1], [1,2], [1,2]]
 	# g.add_arcs(arcs)
 	# assert g.num_arcs == 2
