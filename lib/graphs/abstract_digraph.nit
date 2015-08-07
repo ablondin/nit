@@ -96,23 +96,27 @@ abstract class AbstractDigraph[V: Object]
 	# ~~~
 	fun successors(u: V): Collection[V] is abstract
 
-	# Returns the vertices of this graph.
+	# Returns an iterator over the vertices of this graph.
 	#
 	# ~~~
 	# import digraph
 	# var g = new HashMapDigraph[Int]
-	# g.add_vertices([0,1,2,3])
-	# var s = new HashSet[Int].from([3,2,1,0])
-	# assert new HashSet[Int].from(g.vertices) == s
-	# g.add_arc(3, 4)
-	# s.add(4)
-	# assert new HashSet[Int].from(g.vertices) == s
+	# g.add_arc(0, 1)
+	# g.add_arc(0, 2)
+	# g.add_arc(1, 2)
+	# var vs = new HashSet[Int]
+	# for v in g.vertices_iterator do vs.add(v)
+	# assert vs == new HashSet[Int].from([0,1,2])
 	# ~~~
-	fun vertices: Collection[V] is abstract
+	fun vertices_iterator: Iterator[V] is abstract
 
 	## -------------------- ##
 	## Non abstract methods ##
 	## -------------------- ##
+
+	## ------------- ##
+	## Basic methods ##
+	## ------------- ##
 
 	# Returns true if and only if this graph is empty.
 	#
@@ -124,6 +128,30 @@ abstract class AbstractDigraph[V: Object]
 	# ~~~
 	fun is_empty: Bool do return num_vertices == 0 and num_arcs == 0
 
+	# Returns an array containing the vertices of this graph.
+	#
+	# ~~~
+	# import digraph
+	# var g = new HashMapDigraph[Int]
+	# g.add_vertices([0,2,4,5])
+	# assert g.vertices.length == 4
+	# ~~~
+	fun vertices: Array[V] do return [for u in vertices_iterator do u]
+
+	# Returns an iterator over the arcs of this graph
+	#
+	# ~~~
+	# import digraph
+	# var g = new HashMapDigraph[Int]
+	# g.add_arc(0, 1)
+	# g.add_arc(0, 2)
+	# g.add_arc(1, 2)
+	# for arc in g.arcs_iterator do
+	# 	assert g.has_arc(arc[0], arc[1])
+	# end
+	# ~~~
+	fun arcs_iterator: Iterator[Array[V]] do return new ArcsIterator[V](self)
+
 	# Returns the arcs of this graph.
 	#
 	# ~~~
@@ -131,11 +159,9 @@ abstract class AbstractDigraph[V: Object]
 	# var g = new HashMapDigraph[Int]
 	# g.add_arc(1, 3)
 	# g.add_arc(2, 3)
-	# for arc in g.arcs do
-	# 	g.has_arc(arc[0], arc[1])
-	# end
+	# assert g.arcs.length == 2
 	# ~~~
-	fun arcs: Collection[Array[V]] do return [for u in vertices do for v in successors(u) do [u, v]]
+	fun arcs: Array[Array[V]] do return [for arc in arcs_iterator do arc]
 
 	# Returns the incoming arcs of vertex `u`.
 	#
@@ -182,7 +208,6 @@ abstract class AbstractDigraph[V: Object]
 		end
 	end
 
-
 	## ---------------------- ##
 	## String representations ##
 	## ---------------------- ##
@@ -201,7 +226,7 @@ abstract class AbstractDigraph[V: Object]
 	do
 		var s = "digraph \{\n"
 		# Writing the vertices
-		for u in vertices do
+		for u in vertices_iterator do
 			s += "   \"{u.to_s.escape_to_dot}\" "
 			s += "[label=\"{u.to_s.escape_to_dot}\"];\n"
 		end
@@ -414,7 +439,7 @@ abstract class AbstractDigraph[V: Object]
 	do
 		var components = new DisjointSet[V]
 		components.add_all(vertices)
-		for arc in arcs do
+		for arc in arcs_iterator do
 			components.union(arc[0], arc[1])
 		end
 		return components
@@ -491,6 +516,34 @@ abstract class AbstractDigraph[V: Object]
 				sccs.union(u, v)
 				if u == v then break
 			end
+		end
+	end
+end
+
+# Arcs iterator
+class ArcsIterator[V: Object]
+	super Iterator[Array[V]]
+
+	# The graph whose arcs are iterated over
+	var graph: AbstractDigraph[V]
+	# Attributes
+	#
+	private var sources_iterator: Iterator[V] = graph.vertices_iterator
+	private var targets_iterator: Iterator[V] is noinit
+
+	init do if not graph.is_empty then targets_iterator = graph.successors(sources_iterator.item).iterator
+
+	redef fun is_ok do return not graph.is_empty and sources_iterator.is_ok and targets_iterator.is_ok
+
+	redef fun item do return [sources_iterator.item, targets_iterator.item]
+
+	redef fun next
+	do
+		if targets_iterator.is_ok then
+			targets_iterator.next
+		else if sources_iterator.is_ok then
+			sources_iterator.next
+			targets_iterator = graph.successors(sources_iterator.item).iterator
 		end
 	end
 end

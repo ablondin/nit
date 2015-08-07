@@ -86,8 +86,5 @@ class HashMapDigraph[V: Object]
 		end
 	end
 
-	redef fun vertices: Collection[V]
-	do
-		return outgoing_vertices_map.keys
-	end
+	redef fun vertices_iterator: Iterator[V] do return outgoing_vertices_map.keys.iterator
 end
