@@ -4,7 +4,7 @@
 module abstract_digraph
 
 # Interface for digraphs
-abstract class AbstractDigraph[V]
+abstract class AbstractDigraph[V: Object]
 
 	## ---------------- ##
 	## Abstract methods ##
@@ -471,7 +471,7 @@ abstract class AbstractDigraph[V]
 end
 
 # Mutable digraph
-abstract class MutableDigraph[V]
+abstract class MutableDigraph[V: Object]
 	super AbstractDigraph[V]
 
 	## ---------------- ##

@@ -6,7 +6,7 @@ module digraph
 import abstract_digraph
 
 # A directed graph represented by hash maps
-class HashMapDigraph[V]
+class HashMapDigraph[V: Object]
 	super MutableDigraph[V]
 
 	# Attributes
