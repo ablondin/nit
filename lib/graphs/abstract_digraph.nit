@@ -528,22 +528,35 @@ class ArcsIterator[V: Object]
 	var graph: AbstractDigraph[V]
 	# Attributes
 	#
-	private var sources_iterator: Iterator[V] = graph.vertices_iterator
+	private var sources_iterator: Iterator[V] is noinit
 	private var targets_iterator: Iterator[V] is noinit
+	init
+	do
+		sources_iterator = graph.vertices_iterator
+		if sources_iterator.is_ok then
+			targets_iterator = graph.successors(sources_iterator.item).iterator
+			if not targets_iterator.is_ok then update_iterators
+		end
+	end
 
-	init do if not graph.is_empty then targets_iterator = graph.successors(sources_iterator.item).iterator
-
-	redef fun is_ok do return not graph.is_empty and sources_iterator.is_ok and targets_iterator.is_ok
+	redef fun is_ok do return sources_iterator.is_ok and targets_iterator.is_ok
 
 	redef fun item do return [sources_iterator.item, targets_iterator.item]
 
 	redef fun next
 	do
-		if targets_iterator.is_ok then
-			targets_iterator.next
-		else if sources_iterator.is_ok then
+		targets_iterator.next
+		update_iterators
+	end
+
+	private fun update_iterators
+	do
+		while not targets_iterator.is_ok and sources_iterator.is_ok
+		do
 			sources_iterator.next
-			targets_iterator = graph.successors(sources_iterator.item).iterator
+			if sources_iterator.is_ok then
+				targets_iterator = graph.successors(sources_iterator.item).iterator
+			end
 		end
 	end
 end
