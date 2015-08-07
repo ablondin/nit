@@ -6,30 +6,30 @@ module digraph
 import abstract_digraph
 
 # A directed graph represented by hash maps
-class HashMapDigraph[V, A]
-	super MutableDigraph[V, A]
+class HashMapDigraph[V]
+	super MutableDigraph[V]
 
 	# Attributes
 	#
-	private var incoming_arcs_map = new HashMap[V, Array[Arc[V, A]]]
-	private var outgoing_arcs_map = new HashMap[V, Array[Arc[V, A]]]
+	private var incoming_vertices_map = new HashMap[V, Array[V]]
+	private var outgoing_vertices_map = new HashMap[V, Array[V]]
 	private var number_of_arcs = 0
 
-	redef fun num_vertices: Int do return outgoing_arcs_map.keys.length end
+	redef fun num_vertices do return outgoing_vertices_map.keys.length end
 
-	redef fun num_arcs: Int do return number_of_arcs end
+	redef fun num_arcs do return number_of_arcs end
 
-	redef fun add_vertex(u: V)
+	redef fun add_vertex(u)
 	do
 		if not has_vertex(u) then
-			incoming_arcs_map[u] = new Array[Arc[V, A]]
-			outgoing_arcs_map[u] = new Array[Arc[V, A]]
+			incoming_vertices_map[u] = new Array[V]
+			outgoing_vertices_map[u] = new Array[V]
 		end
 	end
 
-	redef fun has_vertex(u: V): Bool do return outgoing_arcs_map.keys.has(u)
+	redef fun has_vertex(u) do return outgoing_vertices_map.keys.has(u)
 
-	redef fun remove_vertex(u: V)
+	redef fun remove_vertex(u)
 	do
 		if has_vertex(u) then
 			for v in successors(u) do
@@ -38,112 +38,77 @@ class HashMapDigraph[V, A]
 			for v in predecessors(u) do
 				remove_arc(v, u)
 			end
-			incoming_arcs_map.keys.remove(u)
-			outgoing_arcs_map.keys.remove(u)
+			incoming_vertices_map.keys.remove(u)
+			outgoing_vertices_map.keys.remove(u)
 		end
 	end
 
-	redef fun add_arc(u, v: V, l: nullable A)
+	redef fun add_arc(u, v)
 	do
-		if not has_vertex(u) then add_vertex(u)
-		if not has_vertex(v) then add_vertex(v)
-		var arc = arc(u, v)
-		if arc != null then
-			arc.value = l
-		else
-			arc = new Arc[V, A](u, v, l)
-			incoming_arcs_map[v].add(arc)
-			outgoing_arcs_map[u].add(arc)
+		if not has_arc(u, v) then
+			incoming_vertices_map[v].add(u)
+			outgoing_vertices_map[u].add(v)
 			number_of_arcs += 1
 		end
 	end
 
-	redef fun has_arc(u, v: V): Bool
+	redef fun has_arc(u, v)
 	do
-		return arc(u, v) != null
+		return outgoing_vertices_map[u].has(v)
 	end
 
-	redef fun arc(u, v: V): nullable Arc[V, A]
+	redef fun remove_arc(u, v)
 	do
-		if has_vertex(u) then
-			for arc in outgoing_arcs_map[u] do
-				if arc.target == v then return arc
-			end
-		end
-		return null
-	end
-
-	redef fun arc_value(u, v: V): nullable A
-	do
-		var arc = arc(u, v)
-		if arc != null then return arc.value else return null
-	end
-
-	redef fun remove_arc(u: V, v: V)
-	do
-		if has_vertex(u) then
-			var arc = arc(u, v)
-			if arc != null then
-				outgoing_arcs_map[u].remove(arc)
-				incoming_arcs_map[v].remove(arc)
-				number_of_arcs -= 1
-			end
+		if has_arc(u, v) then
+			outgoing_vertices_map[u].remove(v)
+			incoming_vertices_map[v].remove(u)
+			number_of_arcs -= 1
 		end
 	end
 
-	redef fun predecessors(u: V): nullable Array[V]
+	redef fun predecessors(u): Array[V]
 	do
-		if incoming_arcs_map.keys.has(u) then
-			return [for arc in incoming_arcs_map[u] do arc.source]
+		if incoming_vertices_map.keys.has(u) then
+			return incoming_vertices_map[u].clone
 		else
-			return null
+			return new Array[V]
 		end
 	end
 
-	redef fun successors(u: V): nullable Array[V]
+	redef fun successors(u): Array[V]
 	do
-		if outgoing_arcs_map.keys.has(u) then
-			return [for arc in outgoing_arcs_map[u] do arc.target]
+		if outgoing_vertices_map.keys.has(u) then
+			return outgoing_vertices_map[u].clone
 		else
-			return null
+			return new Array[V]
 		end
 	end
 
 	redef fun vertices: Collection[V]
 	do
-		return outgoing_arcs_map.keys
+		return outgoing_vertices_map.keys
 	end
 
-	redef fun arcs: Collection[Arc[V, A]]
+	redef fun arcs: Collection[Array[V]]
 	do
-		return [for u in vertices do for arc in outgoing_arcs_map[u] do arc]
+		return [for u in vertices do for v in outgoing_vertices_map[u] do [u, v]]
 	end
 
-	redef fun incoming_arcs(u: V): nullable Collection[Arc[V, A]]
+	redef fun incoming_arcs(u): Collection[Array[V]]
 	do
 		if has_vertex(u) then
-			return incoming_arcs_map[u]
+			return [for v in incoming_vertices_map[u] do [v, u]]
 		else
-			return null
+			return new Array[Array[V]]
 		end
 	end
 
-	redef fun outgoing_arcs(u: V): nullable Collection[Arc[V, A]]
+	redef fun outgoing_arcs(u): Collection[Array[V]]
 	do
 		if has_vertex(u) then
-			return outgoing_arcs_map[u]
+			return [for v in outgoing_vertices_map[u] do [u, v]]
 		else
-			return null
-		end
-	end
-
-	redef fun arc_value=(u, v: V, l: A)
-	do
-		var arc = arc(u, v)
-		if arc == null then
-			add_arc(u, v, l)
-		else
-			arc.value = l
+			return new Array[Array[V]]
 		end
 	end
 end
