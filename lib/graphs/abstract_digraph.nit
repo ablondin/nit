@@ -110,6 +110,20 @@ abstract class AbstractDigraph[V: Object]
 	# ~~~
 	fun vertices: Collection[V] is abstract
 
+	## -------------------- ##
+	## Non abstract methods ##
+	## -------------------- ##
+
+	# Returns true if and only if this graph is empty.
+	#
+	# An empty graph is a graph without vertex and arc.
+	#
+	# ~~~
+	# import digraph
+	# assert (new HashMapDigraph[Int]).is_empty
+	# ~~~
+	fun is_empty: Bool do return num_vertices == 0 and num_arcs == 0
+
 	# Returns the arcs of this graph.
 	#
 	# ~~~
@@ -121,7 +135,7 @@ abstract class AbstractDigraph[V: Object]
 	# 	g.has_arc(arc[0], arc[1])
 	# end
 	# ~~~
-	fun arcs: Collection[Array[V]] is abstract
+	fun arcs: Collection[Array[V]] do return [for u in vertices do for v in successors(u) do [u, v]]
 
 	# Returns the incoming arcs of vertex `u`.
 	#
@@ -136,7 +150,14 @@ abstract class AbstractDigraph[V: Object]
 	# 	assert g.is_predecessor(arc[0], arc[1])
 	# end
 	# ~~~
-	fun incoming_arcs(u: V): Collection[Array[V]] is abstract
+	fun incoming_arcs(u: V): Collection[Array[V]]
+	do
+		if has_vertex(u) then
+			return [for v in predecessors(u) do [v, u]]
+		else
+			return new Array[Array[V]]
+		end
+	end
 
 	# Returns the outgoing arcs of vertex `u`.
 	#
@@ -152,11 +173,15 @@ abstract class AbstractDigraph[V: Object]
 	# 	assert g.is_successor(arc[1], arc[0])
 	# end
 	# ~~~
-	fun outgoing_arcs(u: V): Collection[Array[V]] is abstract
+	fun outgoing_arcs(u: V): Collection[Array[V]]
+	do
+		if has_vertex(u) then
+			return [for v in successors(u) do [u, v]]
+		else
+			return new Array[Array[V]]
+		end
+	end
 
-	## -------------------- ##
-	## Non abstract methods ##
-	## -------------------- ##
 
 	## ---------------------- ##
 	## String representations ##
@@ -510,9 +535,9 @@ abstract class MutableDigraph[V: Object]
 
 	# Adds the arc `(u,v)` to this graph.
 	#
-	# If there is an arc from `u` to `v` in this graph, then the value is
-	# overwritten.
-	# If vertex `u` or vertex `v` do not exist in the graph, they are added.
+	# If there is already an arc from `u` to `v` in this graph, then
+	# nothing happens. If vertex `u` or vertex `v` do not exist in the
+	# graph, they are added.
 	#
 	# ~~~
 	# import digraph
@@ -521,10 +546,9 @@ abstract class MutableDigraph[V: Object]
 	# g.add_arc(1, 2)
 	# assert g.has_arc(0, 1)
 	# assert g.has_arc(1, 2)
-	# assert g.arc_value(1, 2) == 4
 	# assert not g.has_arc(1, 0)
 	# g.add_arc(1, 2)
-	# assert g.arc_value(1, 2) == 3
+	# assert g.num_arcs == 2
 	# ~~~
 	fun add_arc(u, v: V) is abstract
 

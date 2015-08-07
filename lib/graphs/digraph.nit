@@ -45,6 +45,8 @@ class HashMapDigraph[V: Object]
 
 	redef fun add_arc(u, v)
 	do
+		if not has_vertex(u) then add_vertex(u)
+		if not has_vertex(v) then add_vertex(v)
 		if not has_arc(u, v) then
 			incoming_vertices_map[v].add(u)
 			outgoing_vertices_map[u].add(v)
@@ -87,28 +89,5 @@ class HashMapDigraph[V: Object]
 	redef fun vertices: Collection[V]
 	do
 		return outgoing_vertices_map.keys
-	end
-
-	redef fun arcs: Collection[Array[V]]
-	do
-		return [for u in vertices do for v in outgoing_vertices_map[u] do [u, v]]
-	end
-
-	redef fun incoming_arcs(u): Collection[Array[V]]
-	do
-		if has_vertex(u) then
-			return [for v in incoming_vertices_map[u] do [v, u]]
-		else
-			return new Array[Array[V]]
-		end
-	end
-
-	redef fun outgoing_arcs(u): Collection[Array[V]]
-	do
-		if has_vertex(u) then
-			return [for v in outgoing_vertices_map[u] do [u, v]]
-		else
-			return new Array[Array[V]]
-		end
 	end
 end
