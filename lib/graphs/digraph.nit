@@ -1,5 +1,8 @@
-# Implementations for representing directed graphs, also called digraphs.
+# Implementation of directed graphs, also called digraphs.
 #
+# Overview
+# ========
+# 
 # The basic (abstract) class is ``Digraph`` and contains all methods for
 # digraphs that do not depend on the underlying data structure. More precisely,
 # if basic operations such as ``predecessors``, ``successors``,
@@ -7,11 +10,60 @@
 # easily derived. Also, all methods found in ``Digraph`` do no modify the
 # graph. For mutable methods, one needs to check the ``MutableDigraph`` child
 # class.
-#
+# 
 # There is currently only one implementing child class named ``HashDigraph``
 # that makes use of the HashMap class. It is therefore simple to provide
 # another implementation: One only has to create a nonabstract specialization
 # of either ``Digraph`` or ``MutableDigraph``.
+# 
+# Basic usage
+# -----------
+# 
+# To create an (empty) new graph whose keys are integers, one simply type
+# ~~~
+# import digraph
+# var g = new HashDigraph[Int]
+# ~~~
+#
+# Then we can add vertices and arcs. Note that if an arc is added whose
+# endpoints are not already in the digraph, they are simply added:
+# ~~~
+# import digraph
+# var g = new HashDigraph[Int]
+# g.add_vertex(0)
+# g.add_vertex(1)
+# g.add_arc(0,1)
+# g.add_arc(1,2)
+# print g
+# # Result: Digraph of 3 vertices and 2 arcs
+# ~~~
+#
+# It is also possible to remove arcs and vertices:
+# ~~~
+# import digraph
+# var g = new HashDigraph[Int]
+# g.add_arc(0,1)
+# g.add_arc(0,2)
+# g.add_arc(1,2)
+# g.add_arc(2,3)
+# g.add_arc(2,4)
+# g.remove_vertex(1)
+# g.remove_arc(2, 4)
+# print g
+# # Result: Digraph of 4 vertices and 2 arcs
+# ~~~
+#
+# If one has installed [Graphviz](http://graphviz.org), it is easy to produce
+# a *dot* file which Graphviz process into a picture:
+# ~~~
+# import digraph
+# var g = new HashDigraph[Int]
+# g.add_arcs([[0,1],[0,2],[1,2],[2,3],[2,4]])
+# print g.to_dot
+# # Then call "dot -Tpng -o graph.png"
+# ~~~
+#
+# ![A graph drawing produced by Graphviz](graph.png)
 module digraph
 
 # Interface for digraphs
