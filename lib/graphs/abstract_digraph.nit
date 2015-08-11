@@ -302,13 +302,13 @@ abstract class Digraph[V: Object]
 	# g.add_arc(1, 2)
 	# g.add_arc(2, 3)
 	# g.add_arc(3, 4)
-	# assert g.is_path([1,2,3])
-	# assert not g.is_path([1,3,3])
+	# assert g.has_path([1,2,3])
+	# assert not g.has_path([1,3,3])
 	# ~~~
-	fun is_path(path: SequenceRead[V]): Bool
+	fun has_path(vertices: SequenceRead[V]): Bool
 	do
-		for i in [0..path.length - 1[ do
-			if not has_arc(path[i], path[i + 1]) then return false
+		for i in [0..vertices.length - 1[ do
+			if not has_arc(vertices[i], vertices[i + 1]) then return false
 		end
 		return true
 	end
@@ -321,12 +321,12 @@ abstract class Digraph[V: Object]
 	# g.add_arc(1, 2)
 	# g.add_arc(2, 3)
 	# g.add_arc(3, 1)
-	# assert g.is_circuit([1,2,3,1])
-	# assert not g.is_circuit([1,3,2,1])
+	# assert g.has_circuit([1,2,3,1])
+	# assert not g.has_circuit([1,3,2,1])
 	# ~~~
-	fun is_circuit(path: SequenceRead[V]): Bool
+	fun has_circuit(vertices: SequenceRead[V]): Bool
 	do
-		return path.is_empty or (is_path(path) and path.first == path.last)
+		return vertices.is_empty or (has_path(vertices) and vertices.first == vertices.last)
 	end
 
 	# Returns a shortest path from vertex `u` to `v`.
