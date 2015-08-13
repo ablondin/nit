@@ -521,6 +521,20 @@ class Array[E]
 		end
 		return res
 	end
+
+	# Returns a sample of this array.
+	fun sample(size: Int): Array[E]
+	do
+		var sample = new Array[E].with_capacity(size)
+		var i = 0
+		while i < length do
+			if nit_rand * (length - i) < m - sample.size then
+				sample.add(self[i])
+			end
+			i += 1
+		end
+		return sample
+	end
 end
 
 # An `Iterator` on `AbstractArray`
