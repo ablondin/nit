@@ -2,7 +2,7 @@
 #
 # Overview
 # ========
-# 
+#
 # This module provides a simple interface together with a concrete
 # implementation of directed graphs (or digraphs).
 #
@@ -14,16 +14,16 @@
 # can be easily derived. Also, all methods found in ``Digraph`` do no modify
 # the graph. For mutable methods, one needs to check the ``MutableDigraph``
 # child class.
-# 
+#
 # There is currently only one concrete implementation named ``HashDigraph``
 # that makes use of the HashMap class for storing the predecessors and
 # successors. It is therefore simple to provide another implementation: One
 # only has to create a nonabstract specialization of either ``Digraph`` or
 # ``MutableDigraph``.
-# 
+#
 # Basic usage
 # -----------
-# 
+#
 # To create an (empty) new graph whose keys are integers, one simply type
 # ~~~
 # import digraph
