@@ -3,18 +3,23 @@
 # Overview
 # ========
 # 
-# The basic (abstract) class is ``Digraph`` and contains all methods for
+# This module provides a simple interface together with a concrete
+# implementation of directed graphs (or digraphs).
+#
+# The upper level interface is ``Digraph`` and contains all methods for
 # digraphs that do not depend on the underlying data structure. More precisely,
 # if basic operations such as ``predecessors``, ``successors``,
-# ``num_vertices``, etc. are implemented, then high level operations can be
-# easily derived. Also, all methods found in ``Digraph`` do no modify the
-# graph. For mutable methods, one needs to check the ``MutableDigraph`` child
-# class.
+# ``num_vertices``, etc.  are implemented, then high level operations (such as
+# computing the connected components or a shortest path between two vertices)
+# can be easily derived. Also, all methods found in ``Digraph`` do no modify
+# the graph. For mutable methods, one needs to check the ``MutableDigraph``
+# child class.
 # 
-# There is currently only one implementing child class named ``HashDigraph``
-# that makes use of the HashMap class. It is therefore simple to provide
-# another implementation: One only has to create a nonabstract specialization
-# of either ``Digraph`` or ``MutableDigraph``.
+# There is currently only one concrete implementation named ``HashDigraph``
+# that makes use of the HashMap class for storing the predecessors and
+# successors. It is therefore simple to provide another implementation: One
+# only has to create a nonabstract specialization of either ``Digraph`` or
+# ``MutableDigraph``.
 # 
 # Basic usage
 # -----------
@@ -25,8 +30,8 @@
 # var g = new HashDigraph[Int]
 # ~~~
 #
-# Then we can add vertices and arcs. Note that if an arc is added whose
-# endpoints are not already in the digraph, they are simply added:
+# Then we can add vertices and arcs. Note that if an arc is added whose source
+# and target are not already in the digraph, the vertices are added beforehand.
 # ~~~
 # import digraph
 # var g = new HashDigraph[Int]
@@ -34,8 +39,7 @@
 # g.add_vertex(1)
 # g.add_arc(0,1)
 # g.add_arc(1,2)
-# print g
-# # Result: Digraph of 3 vertices and 2 arcs
+# assert g.to_s == "Digraph of 3 vertices and 2 arcs"
 # ~~~
 #
 # It is also possible to remove arcs and vertices:
@@ -49,12 +53,11 @@
 # g.add_arc(2,4)
 # g.remove_vertex(1)
 # g.remove_arc(2, 4)
-# print g
-# # Result: Digraph of 4 vertices and 2 arcs
+# assert g.to_s == "Digraph of 4 vertices and 2 arcs"
 # ~~~
 #
-# If one has installed [Graphviz](http://graphviz.org), it is easy to produce
-# a *dot* file which Graphviz process into a picture:
+# If one has installed [Graphviz](http://graphviz.org), it is easy to produce a
+# *dot* file which Graphviz process into a picture:
 # ~~~
 # import digraph
 # var g = new HashDigraph[Int]
