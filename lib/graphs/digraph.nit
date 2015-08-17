@@ -6,20 +6,21 @@
 # This module provides a simple interface together with a concrete
 # implementation of directed graphs (or digraphs).
 #
-# The upper level interface is ``Digraph`` and contains all methods for
-# digraphs that do not depend on the underlying data structure. More precisely,
-# if basic operations such as ``predecessors``, ``successors``,
-# ``num_vertices``, etc.  are implemented, then high level operations (such as
-# computing the connected components or a shortest path between two vertices)
-# can be easily derived. Also, all methods found in ``Digraph`` do no modify
-# the graph. For mutable methods, one needs to check the ``MutableDigraph``
-# child class.
+# The upper level interface is `Digraph` and contains all methods for digraphs
+# that do not depend on the underlying data structure. More precisely, if basic
+# operations such as `predecessors`, `successors`, `num_vertices`, etc.  are
+# implemented, then high level operations (such as computing the connected
+# components or a shortest path between two vertices) can be easily derived.
+# Also, all methods found in `Digraph` do no modify the graph. For mutable
+# methods, one needs to check the `MutableDigraph` child class. Vertices can be
+# any `Object`, but there is no information stored in the arcs, which are
+# simple arrays of the form `[u,v]`, where `u` is the source of the arc and `v`
+# is the target.
 #
-# There is currently only one concrete implementation named ``HashDigraph``
-# that makes use of the HashMap class for storing the predecessors and
-# successors. It is therefore simple to provide another implementation: One
-# only has to create a nonabstract specialization of either ``Digraph`` or
-# ``MutableDigraph``.
+# There is currently only one concrete implementation named `HashDigraph` that
+# makes use of the HashMap class for storing the predecessors and successors.
+# It is therefore simple to provide another implementation: One only has to
+# create a nonabstract specialization of either `Digraph` or `MutableDigraph`.
 #
 # Basic usage
 # -----------
@@ -66,7 +67,7 @@
 # # Then call "dot -Tpng -o graph.png"
 # ~~~
 #
-# ![A graph drawing produced by Graphviz](graph.png)
+# ![A graph drawing produced by Graphviz](https://github.com/privat/nit/blob/master/lib/graph.png)
 module digraph
 
 # Interface for digraphs
