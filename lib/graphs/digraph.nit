@@ -67,7 +67,7 @@
 module digraph
 
 # Interface for digraphs
-abstract class Digraph[V: Object]
+interface Digraph[V: Object]
 
 	## ---------------- ##
 	## Abstract methods ##
@@ -530,52 +530,59 @@ abstract class Digraph[V: Object]
 	# ~~~
 	fun strongly_connected_components: DisjointSet[V]
 	do
-		sccs = new DisjointSet[V]
-		sccs.add_all(vertices)
-		tarjan_index = 0
-		tarjan_stack = (new Array[V]).as_lifo
-		tarjan_vertex_to_index = new HashMap[V, Int]
-		tarjan_ancestor = new HashMap[V, Int]
-		tarjan_in_stack = new HashMap[V, Bool]
-		for v in vertices do
-			tarjan(v)
+		var tarjanAlgorithm = new TarjanAlgorithm[V](self)
+		return tarjanAlgorithm.strongly_connected_components
+	end
+end
+
+# Computing the strongly connected components using Tarjan's algorithm
+private class TarjanAlgorithm[V: Object]
+	# The graph whose strongly connected components will be computed
+	var graph: Digraph[V]
+	# The strongly connected components computed in Tarjan's algorithm
+	var sccs = new DisjointSet[V]
+	# An index used for Tarjan's algorithm
+	var index = 0
+	# A stack used for Tarjan's algorithm
+	var stack: Queue[V] = (new Array[V]).as_lifo
+	# A map associating with each vertex its index
+	var vertex_to_index = new HashMap[V, Int]
+	# A map associating with each vertex its ancestor in Tarjan's algorithm
+	var ancestor = new HashMap[V, Int]
+	# True if and only if the vertex is in the stack
+	var in_stack = new HashSet[V]
+
+	# Returns the strongly connected components of a graph
+	fun strongly_connected_components: DisjointSet[V]
+	do
+		for u in graph.vertices_iterator do sccs.add(u)
+		for v in graph.vertices_iterator do
+			visit(v)
 		end
 		return sccs
 	end
 
-	# The strongly connected components computed in Tarjan's algorithm
-	private var sccs: DisjointSet[V] is noinit
-	# An index used for Tarjan's algorithm
-	private var tarjan_index: Int is noinit
-	# A stack used for Tarjan's algorithm
-	private var tarjan_stack: Queue[V] is noinit
-	# A map associating with each vertex its index
-	private var tarjan_vertex_to_index: HashMap[V, Int] is noinit
-	# A map associating with each vertex its ancestor in Tarjan's algorithm
-	private var tarjan_ancestor: HashMap[V, Int] is noinit
-	# True if and only if the vertex is in the stack
-	private var tarjan_in_stack: HashMap[V, Bool] is noinit
 	# The recursive part of Tarjan's algorithm
-	private fun tarjan(u: V)
+	fun visit(u: V)
 	do
-		tarjan_vertex_to_index[u] = tarjan_index
-		tarjan_ancestor[u] = tarjan_index
-		tarjan_index += 1
-		tarjan_stack.add(u)
-		tarjan_in_stack[u] = true
-		for v in successors(u) do
-			if not tarjan_vertex_to_index.keys.has(v) then
-				tarjan(v)
-				tarjan_ancestor[u] = tarjan_ancestor[u].min(tarjan_ancestor[v])
-			else if tarjan_in_stack[v] then
-				tarjan_ancestor[u] = tarjan_ancestor[u].min(tarjan_vertex_to_index[v])
+		vertex_to_index[u] = index
+		ancestor[u] = index
+		index += 1
+		stack.add(u)
+		in_stack.add(u)
+		for v in graph.successors(u) do
+			if not vertex_to_index.keys.has(v) then
+				visit(v)
+				ancestor[u] = ancestor[u].min(ancestor[v])
+			else if in_stack.has(v) then
+				ancestor[u] = ancestor[u].min(vertex_to_index[v])
 			end
 		end
-		if tarjan_vertex_to_index[u] == tarjan_ancestor[u] then
+		if vertex_to_index[u] == ancestor[u] then
 			var v
 			loop
-				v = tarjan_stack.take
-				tarjan_in_stack[v] = false
+				v = stack.take
+				in_stack.remove(v)
 				sccs.union(u, v)
 				if u == v then break
 			end
