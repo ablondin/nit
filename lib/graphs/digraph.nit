@@ -36,10 +36,10 @@
 # There is currently only one concrete implementation named `HashDigraph` that
 # makes use of the HashMap class for storing the predecessors and successors.
 # It is therefore simple to provide another implementation: One only has to
-# create a nonabstract specialization of either `Digraph` or `MutableDigraph`.
+# create a concrete specialization of either `Digraph` or `MutableDigraph`.
 #
-# Basic usage
-# ===========
+# Basic methods
+# =============
 #
 # To create an (empty) new graph whose keys are integers, one simply type
 # ~~~
@@ -59,7 +59,23 @@
 # assert g.to_s == "Digraph of 3 vertices and 2 arcs"
 # ~~~
 #
-# It is also possible to remove arcs and vertices:
+# One might also create digraphs with strings in vertices, for instance to
+# represent some directed relation. However, it is currently not possible to
+# store values in the arcs.
+# ~~~
+# import digraph
+# var g = new HashDigraph[String]
+# g.add_vertex("Amy")
+# g.add_vertex("Bill")
+# g.add_vertex("Chris")
+# g.add_vertex("Diane")
+# g.add_arc("Amy", "Bill")    # Amy likes Bill
+# g.add_arc("Bill", "Amy")    # Bill likes Amy
+# g.add_arc("Chris", "Diane") # and so on
+# g.add_arc("Diane", "Amy")   # and so on
+# ~~~
+#
+# `HashDigraph`s are mutable, i.e. one might remove arcs and/or vertices:
 # ~~~
 # import digraph
 # var g = new HashDigraph[Int]
@@ -84,6 +100,51 @@
 # ~~~
 #
 # ![A graph drawing produced by Graphviz](https://github.com/privat/nit/blob/master/lib/graph.png)
+#
+# Other methods
+# =============
+#
+# There exist other methods available for digraphs and many other will be
+# implemented in the future. For more details, one should look at the methods
+# directly. For instance, the [strongly connected components]
+# (https://en.wikipedia.org/wiki/Strongly_connected_component) of a digraph are
+# returned as a [disjoint set data structure]
+# (https://en.wikipedia.org/wiki/Disjoint-set_data_structure) (i.e. a set of
+# sets):
+# ~~~
+# import digraph
+# var g = new HashDigraph[Int]
+# g.add_arcs([[1,2],[2,1],[2,3],[3,4],[4,5],[5,3]])
+# for component in g.strongly_connected_components.to_partitions
+# do
+# 	print component
+# end
+# # Prints [1,2] and [3,4,5]
+# ~~~
+#
+# It is also possible to compute a shortest (directed) path between two
+# vertices:
+# ~~~
+# import digraph
+# var g = new HashDigraph[Int]
+# g.add_arcs([[1,2],[2,1],[2,3],[3,4],[4,5],[5,3]])
+# var path = g.a_shortest_path(2, 4)
+# if path != null then print path else print "No path"
+# # Prints [2,3,4]
+# path = g.a_shortest_path(4, 2)
+# if path != null then print path else print "No path"
+# # Prints "No path"
+# ~~~
+#
+# Extending the library
+# =====================
+#
+# There at least two ways of providing new methods on digraphs. If the method
+# is standard and could be useful to other users, you should consider including
+# your implementation directly in this library.
+#
+# Otherwise, for personal use, you should simply define a new class inheriting
+# from `HashDigraph` and add the new services.
 module digraph
 
 # Interface for digraphs
