@@ -139,9 +139,9 @@
 # Extending the library
 # =====================
 #
-# There at least two ways of providing new methods on digraphs. If the method
-# is standard and could be useful to other users, you should consider including
-# your implementation directly in this library.
+# There are at least two ways of providing new methods on digraphs. If the
+# method is standard and could be useful to other users, you should consider
+# including your implementation directly in this library.
 #
 # Otherwise, for personal use, you should simply define a new class inheriting
 # from `HashDigraph` and add the new services.
